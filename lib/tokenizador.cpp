@@ -130,29 +130,30 @@ bool esAcronimo(const string &str, size_t &i, string &acronimo, string delimiter
 
 bool esNumeroDecimal(const string &str, size_t &i, string &decimal, string delimiters){
     size_t original_i = i;
-    while (i < str.size() && (delimiters.find(str[i]) == string::npos || str[i] == '.' || str[i] == ',')) {
-        if (!isdigit(str[i]) && str[i] != '.' && str[i] != ',') {
-            i = original_i;
-            decimal = "";
-            return false;
-        }
 
-        if ((str[i] == '.' || str[i] == ',') && (decimal.find('.') != string::npos || decimal.find(',') != string::npos)){
-            i = original_i;
-            decimal = "";
-            return false;
-        }
-
-        if (decimal == "" && (str[i] == '.' || str[i] == ',')){
-            decimal += "0";
-        }
+    // Si el primer elemento es un ./, se añade el 0.
+    if ((str[i] == '.' || str[i] == ',') && (str[i-1] != '.' && str[i-1] != ',')){
+        decimal += "0";
         decimal += str[i];
-        cout << "decimal: " << decimal << endl;
         i++;
     }
 
+    while(i < str.size() && (delimiters.find(str[i]) == string::npos || (str[i] == '.' || str[i] == ','))){
+        if (!isdigit(str[i]) && str[i] != '.' && str[i] != ','){
+            i = original_i;
+            decimal = "";
+            return false;
+        }
+        decimal += str[i];
+        i++;
+    }
+
+    if (decimal[decimal.size() - 1] == '.' || decimal[decimal.size() - 1] == ',') 
+        decimal.pop_back();
+
     return true;
 }
+
 
 void Tokenizador::Tokenizar(const string& str, list<string>& tokens) const{
     // Tokeniza str devolviendo el resultado en tokens. La lista tokens se
@@ -180,13 +181,12 @@ void Tokenizador::Tokenizar(const string& str, list<string>& tokens) const{
 
     while (i < str.size()){
         // Saltar delimitadores iniciales a menos que sea decimal
-        if (str[i] == '.' || str[i] == ',') {
-            puedeSerDecimal = true;
-        }
-        else{
-            while (i < str.size() && delimiters.find(str[i]) != string::npos) {
-                i++;
+        while (i < str.size() && delimiters.find(str[i]) != string::npos) {
+            if ((str[i] == '.' || str[i] == ',') && (i+1 < str.size() && isdigit(str[i+1]))){
+                puedeSerDecimal = true;
+                break;
             }
+            i++;
         }
         if (i == str.size()) break;
 
@@ -227,14 +227,12 @@ void Tokenizador::Tokenizar(const string& str, list<string>& tokens) const{
             i++;
             puedeSerDecimal = false;
         }
-        else{
-            while (i < str.size() && delimiters.find(str[i]) == string::npos) {
-                i++;
-            }
-            tokens.push_back(str.substr(start_token, i - start_token));
+        while (i < str.size() && delimiters.find(str[i]) == string::npos) {
+            i++;
         }
+        tokens.push_back(str.substr(start_token, i - start_token));
+        
     }
-
 }
 
 bool Tokenizador::Tokenizar(const string& i, const string& f) const{
