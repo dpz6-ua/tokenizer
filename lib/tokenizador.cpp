@@ -131,25 +131,53 @@ bool esAcronimo(const string &str, size_t &i, string &acronimo, string delimiter
 bool esNumeroDecimal(const string &str, size_t &i, string &decimal, string delimiters){
     size_t original_i = i;
 
+    if (str[i] == '$' || str[i] == '%'){
+        return false;
+    }
+
     // Si el primer elemento es un ./, se añade el 0.
-    if ((str[i] == '.' || str[i] == ',') && (str[i-1] != '.' && str[i-1] != ',')){
+    if ((str[i] == '.' || str[i] == ',')){
         decimal += "0";
         decimal += str[i];
         i++;
     }
 
-    while(i < str.size() && (delimiters.find(str[i]) == string::npos || (str[i] == '.' || str[i] == ','))){
-        if (!isdigit(str[i]) && str[i] != '.' && str[i] != ','){
+    while(i < str.size() && (delimiters.find(str[i]) == string::npos || (str[i] == '.' || str[i] == ',' || str[i] == '$' || str[i] == '%'))){
+        if (!isdigit(str[i]) && str[i] != '.' && str[i] != ',' && str[i] != '$' && str[i] != '%'){
             i = original_i;
             decimal = "";
             return false;
         }
+        if (str[i] == '.' || str[i] == ','){
+            if (str[i-1] == '.' || str[i-1] == ','){
+                break;
+            }
+        }
+
+        if (str[i] == '$' || str[i] == '%'){
+            if (i+1 < str.size() && str[i+1] == ' ' && decimal.find('.') == string::npos && decimal.find(',') == string::npos){
+                decimal += str[i];
+                i++;
+                break;
+            }
+
+            if (i+1 < str.size() && str[i+1] != ' '){
+                i = original_i;
+                decimal = "";
+                return false;
+            }
+            else{
+                break;
+            }
+        }
+
         decimal += str[i];
         i++;
     }
 
     if (decimal[decimal.size() - 1] == '.' || decimal[decimal.size() - 1] == ',') 
         decimal.pop_back();
+    
 
     return true;
 }
@@ -177,10 +205,11 @@ void Tokenizador::Tokenizar(const string& str, list<string>& tokens) const{
     string decimal = "";
     bool guion = delimiters.find('-') != string::npos;
     bool punto = delimiters.find('.') != string::npos;
+    bool coma = delimiters.find(',') != string::npos;
     bool puedeSerDecimal = false;
 
     while (i < str.size()){
-        // Saltar delimitadores iniciales a menos que sea decimal
+        // Saltar delimitadores iniciales a menos que pueda ser decimal
         while (i < str.size() && delimiters.find(str[i]) != string::npos) {
             if ((str[i] == '.' || str[i] == ',') && (i+1 < str.size() && isdigit(str[i+1]))){
                 puedeSerDecimal = true;
@@ -188,7 +217,8 @@ void Tokenizador::Tokenizar(const string& str, list<string>& tokens) const{
             }
             i++;
         }
-        if (i == str.size()) break;
+        if (i == str.size()) 
+            break;
 
         size_t start_token = i;
         if (casosEspeciales){
@@ -197,7 +227,8 @@ void Tokenizador::Tokenizar(const string& str, list<string>& tokens) const{
                 tokens.push_back(url);
                 continue;
             }
-            if (esNumeroDecimal(str, i, decimal, delimiters)){
+
+            if (punto && coma && esNumeroDecimal(str, i, decimal, delimiters)){
                 tokens.push_back(decimal);
                 puedeSerDecimal = false;
                 decimal = "";
@@ -223,15 +254,16 @@ void Tokenizador::Tokenizar(const string& str, list<string>& tokens) const{
         }
         
         //No se ha detectado el punto ni la coma como número decimal
-        if (puedeSerDecimal) {
-            i++;
+        if (puedeSerDecimal){
             puedeSerDecimal = false;
-        }
-        while (i < str.size() && delimiters.find(str[i]) == string::npos) {
             i++;
         }
-        tokens.push_back(str.substr(start_token, i - start_token));
-        
+        else{
+            while (i < str.size() && delimiters.find(str[i]) == string::npos) {
+                i++;
+            }
+            tokens.push_back(str.substr(start_token, i - start_token));
+        }
     }
 }
 
