@@ -153,7 +153,7 @@ bool esNumeroDecimal(const string &str, size_t &i, string &decimal, string delim
                 break;
             }
         }
-
+        
         if (str[i] == '$' || str[i] == '%'){
             if (i+1 < str.size() && str[i+1] == ' ' && decimal.find('.') == string::npos && decimal.find(',') == string::npos){
                 decimal += str[i];
@@ -177,11 +177,46 @@ bool esNumeroDecimal(const string &str, size_t &i, string &decimal, string delim
 
     if (decimal[decimal.size() - 1] == '.' || decimal[decimal.size() - 1] == ',') 
         decimal.pop_back();
-    
 
     return true;
 }
 
+//////////////////////////////////////////////////////////
+////////////// EMAIL
+//////////////////////////////////////////////////////////
+
+bool esEmail(const string &str, size_t &i, string &email, string delimiters){
+    size_t original = i;
+    string especiales = "@.-_";
+    string primarroba = "";
+    bool hayarroba = false;
+    int arrobacount = 0;
+
+    while (i < str.size() && (delimiters.find(str[i]) == string::npos || (especiales.find(str[i]) != string::npos))) {
+        if ((str[i] == '.' || str[i] == '-' || str[i] == '_') && !hayarroba) {
+            i = original;
+            email = "";
+            return false;
+        }
+
+        if (str[i] == '@'){
+            hayarroba = true;
+            arrobacount++;
+            if (arrobacount > 1){
+                i = original + primarroba.size();
+                email = primarroba;
+                return true;
+            }
+        }
+
+        if (!hayarroba){
+            primarroba += str[i];
+        }
+        email += str[i];
+        i++;
+    }
+    return true;
+}
 
 void Tokenizador::Tokenizar(const string& str, list<string>& tokens) const{
     // Tokeniza str devolviendo el resultado en tokens. La lista tokens se
@@ -203,9 +238,11 @@ void Tokenizador::Tokenizar(const string& str, list<string>& tokens) const{
     string multipalabra = "";
     string acronimo = "";
     string decimal = "";
+    string email = "";
     bool guion = delimiters.find('-') != string::npos;
     bool punto = delimiters.find('.') != string::npos;
     bool coma = delimiters.find(',') != string::npos;
+    bool arroba = delimiters.find('@') != string::npos;
     bool puedeSerDecimal = false;
 
     while (i < str.size()){
@@ -227,19 +264,17 @@ void Tokenizador::Tokenizar(const string& str, list<string>& tokens) const{
                 tokens.push_back(url);
                 continue;
             }
-
             if (punto && coma && esNumeroDecimal(str, i, decimal, delimiters)){
                 tokens.push_back(decimal);
                 puedeSerDecimal = false;
                 decimal = "";
                 continue;
             }
-            /*
-            if (!puedeSerDecimal && esEmail(str, i)){
-                procesarEmail(str, i);
+            if (!puedeSerDecimal && arroba && esEmail(str, i, email, delimiters)){
+                tokens.push_back(email);
+                email = "";
                 continue;
             }
-            */
             if (!puedeSerDecimal && punto && esAcronimo(str, i, acronimo, delimiters)){
                 tokens.push_back(acronimo);
                 acronimo = "";
