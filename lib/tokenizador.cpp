@@ -82,13 +82,12 @@ bool esMultipalabra(const string &str, size_t &i, string delimiters, string &mul
     size_t original_i = i;
 
     while (i < str.size() && (delimiters.find(str[i]) == string::npos || (str[i] == '-' && i+1 < str.size() && str[i + 1] != '-'))) {
-        if (!isalpha(str[i]) && str[i] != '-') {
+        if (!isalnum(str[i]) && str[i] != '-') {
             i = original_i;
             multipalabra = "";
             return false;
         }
         multipalabra += str[i];
-        //cout << multipalabra << endl;
         i++;
     }
 
@@ -121,6 +120,11 @@ bool esAcronimo(const string &str, size_t &i, string &acronimo, string delimiter
 
     if (acronimo[acronimo.size() - 1] == '.') 
         acronimo.pop_back();
+    if (acronimo.find('.') == string::npos){
+        i = original_i;
+        acronimo = "";
+        return false;
+    }
     return true;
 }
 
@@ -199,7 +203,17 @@ bool esEmail(const string &str, size_t &i, string &email, string delimiters){
             return false;
         }
 
+        if (str[i] == '.' || str[i] == '-' || str[i] == '_'){
+            if (i+1 < str.size() && (str[i+1] == '.' || str[i+1] == '-' || str[i+1] == '_')){
+                return true;
+            }
+        }
+
         if (str[i] == '@'){
+            if (i+1 < str.size() && (str[i+1] == '.' || str[i+1] == '-' || str[i+1] == '_')){
+                i++;
+                return true;
+            }
             hayarroba = true;
             arrobacount++;
             if (arrobacount > 1){
@@ -215,6 +229,19 @@ bool esEmail(const string &str, size_t &i, string &email, string delimiters){
         email += str[i];
         i++;
     }
+
+    if (email.find('@') == string::npos){
+        i = original;
+        email = "";
+        return false;
+    }
+
+    if (email[email.size() - 1] == '.' || email[email.size() - 1] == '-' || email[email.size() - 1] == '_') 
+        email.pop_back();
+
+    if (email[email.size() - 1] == '@')
+        email.pop_back();
+        
     return true;
 }
 
@@ -265,22 +292,26 @@ void Tokenizador::Tokenizar(const string& str, list<string>& tokens) const{
                 continue;
             }
             if (punto && coma && esNumeroDecimal(str, i, decimal, delimiters)){
+                cout << "Decimal: " << decimal << endl;
                 tokens.push_back(decimal);
                 puedeSerDecimal = false;
                 decimal = "";
                 continue;
             }
             if (!puedeSerDecimal && arroba && esEmail(str, i, email, delimiters)){
+                cout << "Email: " << email << endl;
                 tokens.push_back(email);
                 email = "";
                 continue;
             }
             if (!puedeSerDecimal && punto && esAcronimo(str, i, acronimo, delimiters)){
+                cout << "Acronimo: " << acronimo << endl;
                 tokens.push_back(acronimo);
                 acronimo = "";
                 continue;
             }
             if (!puedeSerDecimal && guion && esMultipalabra(str, i, delimiters, multipalabra)){
+                cout << "Multipalabra: " << multipalabra << endl;
                 tokens.push_back(multipalabra);
                 multipalabra = "";
                 continue;

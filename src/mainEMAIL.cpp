@@ -17,7 +17,7 @@ int main(){
         Tokenizador a(",", true, false);
         list<string> tokens;
         list<string> lt1, lt2;
-        
+
         a.DelimitadoresPalabra("@.&");
         a.Tokenizar("catedraTelefonicaUA@iuii.ua.es p1 p2", tokens);
         // La lista de tokens a devolver debería contener: "catedraTelefonicaUA@iuii.ua.es, p1, p2"
