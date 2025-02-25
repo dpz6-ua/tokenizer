@@ -292,26 +292,22 @@ void Tokenizador::Tokenizar(const string& str, list<string>& tokens) const{
                 continue;
             }
             if (punto && coma && esNumeroDecimal(str, i, decimal, delimiters)){
-                cout << "Decimal: " << decimal << endl;
                 tokens.push_back(decimal);
                 puedeSerDecimal = false;
                 decimal = "";
                 continue;
             }
             if (!puedeSerDecimal && arroba && esEmail(str, i, email, delimiters)){
-                cout << "Email: " << email << endl;
                 tokens.push_back(email);
                 email = "";
                 continue;
             }
             if (!puedeSerDecimal && punto && esAcronimo(str, i, acronimo, delimiters)){
-                cout << "Acronimo: " << acronimo << endl;
                 tokens.push_back(acronimo);
                 acronimo = "";
                 continue;
             }
             if (!puedeSerDecimal && guion && esMultipalabra(str, i, delimiters, multipalabra)){
-                cout << "Multipalabra: " << multipalabra << endl;
                 tokens.push_back(multipalabra);
                 multipalabra = "";
                 continue;
