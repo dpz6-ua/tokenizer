@@ -86,7 +86,26 @@ string quitarAcentosYMinusculas(const string& texto) {
 
 bool esURL(const string str, size_t i){
     // Devuelve true si la cadena str es una URL
-    return (str.substr(i, 5) == "http:" || str.substr(i, 6) == "https:" || str.substr(i, 4) == "ftp:");
+    if (str.substr(i, 5) == "http:"){
+        if (i+6 >= str.size()){
+            return false;
+        }
+        return true;
+    }
+    if (str.substr(i, 6) == "https:"){
+        if (i+7 >= str.size()){
+            return false;
+        }
+        return true;
+    }
+    if (str.substr(i, 4) == "ftp:"){
+        if (i+5 >= str.size()){
+            return false;
+        }
+        return true;
+    }
+    return false;
+    
 }
 
 string extraerURL(const string& str, size_t& pos, string delimiters) {

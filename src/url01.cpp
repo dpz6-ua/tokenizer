@@ -27,14 +27,13 @@ main(void)
 Tokenizador a("-#:/.", true, false); 
 list<string> tokens; 
 
-a.Tokenizar("a http:", tokens);
+a.Tokenizar("http:", tokens);
 	imprimirListaSTL(tokens);
 
-
-a.Tokenizar("a http:////ab/ s", tokens);
+a.Tokenizar("http:////ab/", tokens);
 	imprimirListaSTL(tokens);
 
-a.Tokenizar("http:////ab.yyeees a", tokens);
+a.Tokenizar("http:////ab.", tokens);
 	imprimirListaSTL(tokens);
 
 
