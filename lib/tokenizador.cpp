@@ -1,6 +1,7 @@
 #include "../include/tokenizador.h"
 #include <unistd.h>
 #include <dirent.h>
+#include <unordered_map>
 
 Tokenizador::Tokenizador(const string& delimitadoresPalabra, const bool& kcasosEspeciales, const bool& minuscSinAcentos){
     // Inicializa delimiters a delimitadoresPalabra filtrando que no se introduzcan delimitadores repetidos 
@@ -12,8 +13,14 @@ Tokenizador::Tokenizador(const string& delimitadoresPalabra, const bool& kcasosE
         }
     }
 
-    if (kcasosEspeciales && delimiters.find(" ") == string::npos){
-        delimiters += " ";
+    if (delimiters.find(" ") == string::npos){
+        if (kcasosEspeciales){
+            delimiters += " ";
+        }
+        espacio = false;
+    }
+    else{
+        espacio = true;
     }
     casosEspeciales = kcasosEspeciales;
     pasarAminuscSinAcentos = minuscSinAcentos;
@@ -24,6 +31,7 @@ Tokenizador::Tokenizador(const Tokenizador& t){
     this->delimiters = t.delimiters;
     this->casosEspeciales = t.casosEspeciales;
     this->pasarAminuscSinAcentos = t.pasarAminuscSinAcentos;
+    this->espacio = t.espacio;
 }
 
 Tokenizador::Tokenizador(){	
@@ -31,6 +39,7 @@ Tokenizador::Tokenizador(){
     delimiters = ",;:.-/+*\\ '\"{}[]()<>¡!¿?&#=\t@";
     casosEspeciales = true;
     pasarAminuscSinAcentos = false;
+    espacio = true;
 }
 
 Tokenizador::~Tokenizador (){	
@@ -43,8 +52,32 @@ Tokenizador &Tokenizador::operator=(const Tokenizador& t){
         this->delimiters = t.delimiters;
         this->casosEspeciales = t.casosEspeciales;
         this->pasarAminuscSinAcentos = t.pasarAminuscSinAcentos;
+        this->espacio = t.espacio;
     }
     return *this;
+}
+
+string quitarAcentosYMinusculas(const string& texto) {
+    unordered_map<char, char> conversion = {
+        {'Á', 'a'}, {'É', 'e'}, {'Í', 'i'}, {'Ó', 'o'}, {'Ú', 'u'}, {'Ü', 'u'},
+        {'á', 'a'}, {'é', 'e'}, {'í', 'i'}, {'ó', 'o'}, {'ú', 'u'}, {'ü', 'u'},
+        {'À', 'a'}, {'È', 'e'}, {'Ì', 'i'}, {'Ò', 'o'}, {'Ù', 'u'},
+        {'à', 'a'}, {'è', 'e'}, {'ì', 'i'}, {'ò', 'o'}, {'ù', 'u'},
+        {'Â', 'a'}, {'Ê', 'e'}, {'Î', 'i'}, {'Ô', 'o'}, {'Û', 'u'},
+        {'â', 'a'}, {'ê', 'e'}, {'î', 'i'}, {'ô', 'o'}, {'û', 'u'},
+        {'Ã', 'a'}, {'Õ', 'o'}, {'ã', 'a'}, {'õ', 'o'}, {'Ñ', 'n'}, {'ñ', 'n'},
+        {'Ç', 'c'}, {'ç', 'c'}
+    };
+
+    string resultado;
+    for (char c : texto) {
+        if (conversion.count(c)) {
+            resultado += conversion[c]; // Sustituir acentuado por versión sin acento
+        } else {
+            resultado += tolower(c); // Convertir cualquier otro carácter a minúscula
+        }
+    }
+    return resultado;
 }
 
 //////////////////////////////////////////////////////////
@@ -260,6 +293,13 @@ void Tokenizador::Tokenizar(const string& str, list<string>& tokens) const{
         pos = str.find_first_of(delimiters, lastPos);
     }
     */
+    
+    string strstr = str;
+
+    if (pasarAminuscSinAcentos){
+        strstr = quitarAcentosYMinusculas(str);
+    }
+
     tokens.clear();
     size_t i = 0;
     string multipalabra = "";
@@ -272,42 +312,42 @@ void Tokenizador::Tokenizar(const string& str, list<string>& tokens) const{
     bool arroba = delimiters.find('@') != string::npos;
     bool puedeSerDecimal = false;
 
-    while (i < str.size()){
+    while (i < strstr.size()){
         // Saltar delimitadores iniciales a menos que pueda ser decimal
-        while (i < str.size() && delimiters.find(str[i]) != string::npos) {
-            if ((str[i] == '.' || str[i] == ',') && (i+1 < str.size() && isdigit(str[i+1]))){
+        while (i < strstr.size() && delimiters.find(strstr[i]) != string::npos) {
+            if ((strstr[i] == '.' || strstr[i] == ',') && (i+1 < strstr.size() && isdigit(strstr[i+1]))){
                 puedeSerDecimal = true;
                 break;
             }
             i++;
         }
-        if (i == str.size()) 
+        if (i == strstr.size()) 
             break;
 
         size_t start_token = i;
         if (casosEspeciales){
-            if (!puedeSerDecimal && esURL(str, i)){
-                string url = extraerURL(str, i, delimiters);
+            if (!puedeSerDecimal && esURL(strstr, i)){
+                string url = extraerURL(strstr, i, delimiters);
                 tokens.push_back(url);
                 continue;
             }
-            if (punto && coma && esNumeroDecimal(str, i, decimal, delimiters)){
+            if (punto && coma && esNumeroDecimal(strstr, i, decimal, delimiters)){
                 tokens.push_back(decimal);
                 puedeSerDecimal = false;
                 decimal = "";
                 continue;
             }
-            if (!puedeSerDecimal && arroba && esEmail(str, i, email, delimiters)){
+            if (!puedeSerDecimal && arroba && esEmail(strstr, i, email, delimiters)){
                 tokens.push_back(email);
                 email = "";
                 continue;
             }
-            if (!puedeSerDecimal && punto && esAcronimo(str, i, acronimo, delimiters)){
+            if (!puedeSerDecimal && punto && esAcronimo(strstr, i, acronimo, delimiters)){
                 tokens.push_back(acronimo);
                 acronimo = "";
                 continue;
             }
-            if (!puedeSerDecimal && guion && esMultipalabra(str, i, delimiters, multipalabra)){
+            if (!puedeSerDecimal && guion && esMultipalabra(strstr, i, delimiters, multipalabra)){
                 tokens.push_back(multipalabra);
                 multipalabra = "";
                 continue;
@@ -321,10 +361,10 @@ void Tokenizador::Tokenizar(const string& str, list<string>& tokens) const{
             i++;
         }
         else{
-            while (i < str.size() && delimiters.find(str[i]) == string::npos) {
+            while (i < strstr.size() && delimiters.find(strstr[i]) == string::npos) {
                 i++;
             }
-            tokens.push_back(str.substr(start_token, i - start_token));
+            tokens.push_back(strstr.substr(start_token, i - start_token));
         }
     }
 }
@@ -448,12 +488,16 @@ void Tokenizador::DelimitadoresPalabra(const string& nuevoDelimiters){
             delimiters += c;
             if (c == ' '){
                 found_espacio = true;
+                this->espacio = true;
             }
         }
     }
 
-    if (!found_espacio && casosEspeciales){
-        delimiters += " ";
+    if (!found_espacio){
+        this->espacio = false;
+        if (casosEspeciales){
+            delimiters += " ";
+        }
     }
 
 }
@@ -475,7 +519,13 @@ string Tokenizador::DelimitadoresPalabra() const{
 
 void Tokenizador::CasosEspeciales(const bool& nuevoCasosEspeciales){
     // Cambia la variable privada "casosEspeciales"
-    this->casosEspeciales = nuevoCasosEspeciales; 
+    this->casosEspeciales = nuevoCasosEspeciales;
+    if (!this->espacio && !nuevoCasosEspeciales){
+        size_t pos = delimiters.find(" ");
+        if (pos != string::npos){
+            delimiters.erase(pos, 1);
+        }
+    }
 }
 
 bool Tokenizador::CasosEspeciales(){
@@ -486,7 +536,7 @@ bool Tokenizador::CasosEspeciales(){
 void Tokenizador::PasarAminuscSinAcentos(const bool& nuevoPasarAminuscSinAcentos){
     // Cambia la variable privada "pasarAminuscSinAcentos". Atencion al formato de codificacion del corpus
     // (comando "file" de Linux). Para la correccion de la practica se utilizara el formato actual (ISO-8859). 
-
+    this->pasarAminuscSinAcentos = nuevoPasarAminuscSinAcentos;
 }
 
 bool Tokenizador::PasarAminuscSinAcentos(){

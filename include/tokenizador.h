@@ -71,6 +71,7 @@ private:
     // Si true detectara palabras compuestas y casos especiales. Sino, trabajara al igual que el algoritmo propuesto en la seccion "Version del tokenizador vista en clase"
     bool pasarAminuscSinAcentos;
     // Si true pasara el token a minusculas y quitara acentos, antes de realizar la tokenizacion
+    bool espacio;
 };
 
 #endif
