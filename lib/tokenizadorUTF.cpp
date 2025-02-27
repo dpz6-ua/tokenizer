@@ -35,8 +35,8 @@ Tokenizador::Tokenizador(const Tokenizador& t){
 }
 
 Tokenizador::Tokenizador(){	
-    // Inicializa delimiters=",;:.-/+*\\ '\"{}[]()<>°!ø?&#=\t@"; casosEspeciales a true; pasarAminuscSinAcentos a false
-    delimiters = ",;:.-/+*\\ '\"{}[]()<>°!ø?&#=\t@";
+    // Inicializa delimiters=",;:.-/+*\\ '\"{}[]()<>¬°!¬ø?&#=\t@"; casosEspeciales a true; pasarAminuscSinAcentos a false
+    delimiters = ",;:.-/+*\\ '\"{}[]()<>¬°!¬ø?&#=\t@";
     casosEspeciales = true;
     pasarAminuscSinAcentos = false;
     espacio = true;
@@ -59,21 +59,22 @@ Tokenizador &Tokenizador::operator=(const Tokenizador& t){
 
 string quitarAcentosYMinusculas(const string& texto) {
     unordered_map<char, char> conversion = {
-        {'¡', 'a'}, {'…', 'e'}, {'Õ', 'i'}, {'”', 'o'}, {'⁄', 'u'}, {'‹', 'u'},
-        {'·', 'a'}, {'È', 'e'}, {'Ì', 'i'}, {'Û', 'o'}, {'˙', 'u'}, {'¸', 'u'},
-        {'¿', 'a'}, {'»', 'e'}, {'Ã', 'i'}, {'“', 'o'}, {'Ÿ', 'u'},
-        {'‡', 'a'}, {'Ë', 'e'}, {'Ï', 'i'}, {'Ú', 'o'}, {'˘', 'u'},
-        {'¬', 'a'}, {' ', 'e'}, {'Œ', 'i'}, {'‘', 'o'}, {'€', 'u'},
-        {'‚', 'a'}, {'Í', 'e'}, {'Ó', 'i'}, {'Ù', 'o'}, {'˚', 'u'},
-        {'√', 'a'}, {'’', 'o'}, {'„', 'a'}, {'ı', 'o'}, {'—', 'Ò'}
+        {'√Å', 'a'}, {'√â', 'e'}, {'√ç', 'i'}, {'√ì', 'o'}, {'√ö', 'u'}, {'√ú', 'u'},
+        {'√°', 'a'}, {'√©', 'e'}, {'√≠', 'i'}, {'√≥', 'o'}, {'√∫', 'u'}, {'√º', 'u'},
+        {'√Ä', 'a'}, {'√à', 'e'}, {'√å', 'i'}, {'√í', 'o'}, {'√ô', 'u'},
+        {'√†', 'a'}, {'√®', 'e'}, {'√¨', 'i'}, {'√≤', 'o'}, {'√π', 'u'},
+        {'√Ç', 'a'}, {'√ä', 'e'}, {'√é', 'i'}, {'√î', 'o'}, {'√õ', 'u'},
+        {'√¢', 'a'}, {'√™', 'e'}, {'√Æ', 'i'}, {'√¥', 'o'}, {'√ª', 'u'},
+        {'√É', 'a'}, {'√ï', 'o'}, {'√£', 'a'}, {'√µ', 'o'}, {'√ë', 'n'}, {'√±', 'n'},
+        {'√á', 'c'}, {'√ß', 'c'}
     };
 
     string resultado;
     for (char c : texto) {
         if (conversion.count(c)) {
-            resultado += conversion[c]; // Sustituir acentuado por versiÛn sin acento
+            resultado += conversion[c]; // Sustituir acentuado por versi√≥n sin acento
         } else {
-            resultado += tolower(c); // Convertir cualquier otro car·cter a min˙scula
+            resultado += tolower(c); // Convertir cualquier otro car√°cter a min√∫scula
         }
     }
     return resultado;
@@ -149,7 +150,7 @@ bool esMultipalabra(const string &str, size_t &i, string delimiters, string &mul
 }
 
 //////////////////////////////////////////////////////////
-////////////// AcrÛnimo
+////////////// Acr√≥nimo
 //////////////////////////////////////////////////////////
 
 bool esAcronimo(const string &str, size_t &i, string &acronimo, string delimiters) {
@@ -180,7 +181,7 @@ bool esAcronimo(const string &str, size_t &i, string &acronimo, string delimiter
 }
 
 //////////////////////////////////////////////////////////
-////////////// N˙meros decimales
+////////////// N√∫meros decimales
 //////////////////////////////////////////////////////////
 
 bool esNumeroDecimal(const string &str, size_t &i, string &decimal, string delimiters){
@@ -190,7 +191,7 @@ bool esNumeroDecimal(const string &str, size_t &i, string &decimal, string delim
         return false;
     }
 
-    // Si el primer elemento es un ./, se aÒade el 0.
+    // Si el primer elemento es un ./, se a√±ade el 0.
     if ((str[i] == '.' || str[i] == ',')){
         decimal += "0";
         decimal += str[i];
@@ -298,7 +299,7 @@ bool esEmail(const string &str, size_t &i, string &email, string delimiters){
 
 void Tokenizador::Tokenizar(const string& str, list<string>& tokens) const{
     // Tokeniza str devolviendo el resultado en tokens. La lista tokens se
-    // vaciar· antes de almacenar el resultado de la tokenizaciÛn.
+    // vaciar√° antes de almacenar el resultado de la tokenizaci√≥n.
 
     /*
     tokens.clear();
@@ -373,7 +374,7 @@ void Tokenizador::Tokenizar(const string& str, list<string>& tokens) const{
             
         }
         
-        //No se ha detectado el punto ni la coma como n˙mero decimal
+        //No se ha detectado el punto ni la coma como n√∫mero decimal
         if (puedeSerDecimal){
             puedeSerDecimal = false;
             i++;
@@ -425,7 +426,7 @@ bool Tokenizador::Tokenizar(const string& i, const string& f) const{
 
 bool Tokenizador::Tokenizar (const string & i) const{
     // Tokeniza el fichero i guardando la salida en un fichero de nombre i
-    // aÒadiendole extension .tk (sin eliminar previamente la extension de i por ejemplo,
+    // a√±adiendole extension .tk (sin eliminar previamente la extension de i por ejemplo,
     // del archivo pp.txt se generaria el resultado en pp.txt.tk), y que contendra una palabra
     // en cada linea del fichero. Devolvera true si se realiza la tokenizacion de forma correcta;
     // false en caso contrario enviando a cerr el mensaje correspondiente (p.ej. que no exista el archivo i)
@@ -436,7 +437,7 @@ bool Tokenizador::Tokenizar (const string & i) const{
 
 bool Tokenizador::TokenizarListaFicheros(const string& i) const{
     // Tokeniza el fichero i que contiene un nombre de fichero por linea guardando la salida en ficheros 
-    // (uno por cada linea de i) cuyo nombre sera el leido en i aÒadiendole extension .tk, y que contendra 
+    // (uno por cada linea de i) cuyo nombre sera el leido en i a√±adiendole extension .tk, y que contendra 
     // una palabra en cada linea del fichero leido en i. Devolvera true si se realiza la tokenizacion de forma 
     // correcta de todos los archivos que contiene i; devolvera false en caso contrario enviando a cerr el mensaje 
     // correspondiente (p.ej. que no exista el archivo i, o que se trate de un directorio, enviando a "cerr" los archivos 
@@ -469,7 +470,7 @@ bool Tokenizador::TokenizarListaFicheros(const string& i) const{
 
 bool Tokenizador::TokenizarDirectorio(const string& i) const{
     // Tokeniza todos los archivos que contenga el directorio i, incluyendo los de los subdirectorios, 
-    // guardando la salida en ficheros cuyo nombre sera el de entrada aÒadiendole extension .tk, y que 
+    // guardando la salida en ficheros cuyo nombre sera el de entrada a√±adiendole extension .tk, y que 
     // contendra una palabra en cada linea del fichero. Devolvera true si se realiza la tokenizacion de forma 
     // correcta de todos los archivos; devolvera false en caso contrario enviando a cerr el mensaje correspondiente 
     // (p.ej. que no exista el directorio i, o los ficheros que no se hayan podido tokenizar)
@@ -521,7 +522,7 @@ void Tokenizador::DelimitadoresPalabra(const string& nuevoDelimiters){
 }
 
 void Tokenizador::AnyadirDelimitadoresPalabra(const string& nuevoDelimiters){ 
-    // AÒade al final de "delimiters" los nuevos delimitadores que aparezcan en "nuevoDelimiters" 
+    // A√±ade al final de "delimiters" los nuevos delimitadores que aparezcan en "nuevoDelimiters" 
     // (no se almacenaran caracteres repetidos)
     for (auto c : nuevoDelimiters){
         if (delimiters.find(c) == string::npos){

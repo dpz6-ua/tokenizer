@@ -20,7 +20,7 @@ public:
     Tokenizador (const Tokenizador&);
 
     Tokenizador ();	
-    // Inicializa delimiters=",;:.-/+*\\ '\"{}[]()<>¡!¿?&#=\t@"; casosEspeciales a true; pasarAminuscSinAcentos a false
+    // Inicializa delimiters=",;:.-/+*\\ '\"{}[]()<>Â¡!Â¿?&#=\t@"; casosEspeciales a true; pasarAminuscSinAcentos a false
 
     ~Tokenizador ();	// Pone delimiters=""
 
@@ -33,19 +33,19 @@ public:
     // Tokeniza el fichero i guardando la salida en el fichero f (una palabra en cada linea del fichero). Devolvera true si se realiza la tokenizacion de forma correcta; false en caso contrario enviando a cerr el mensaje correspondiente (p.ej. que no exista el archivo i)
 
     bool Tokenizar (const string & i) const;
-    // Tokeniza el fichero i guardando la salida en un fichero de nombre i añadiendole extension .tk (sin eliminar previamente la extension de i por ejemplo, del archivo pp.txt se generaria el resultado en pp.txt.tk), y que contendra una palabra en cada linea del fichero. Devolvera true si se realiza la tokenizacion de forma correcta; false en caso contrario enviando a cerr el mensaje correspondiente (p.ej. que no exista el archivo i)
+    // Tokeniza el fichero i guardando la salida en un fichero de nombre i aÃ±adiendole extension .tk (sin eliminar previamente la extension de i por ejemplo, del archivo pp.txt se generaria el resultado en pp.txt.tk), y que contendra una palabra en cada linea del fichero. Devolvera true si se realiza la tokenizacion de forma correcta; false en caso contrario enviando a cerr el mensaje correspondiente (p.ej. que no exista el archivo i)
 
     bool TokenizarListaFicheros (const string& i) const; 
-    // Tokeniza el fichero i que contiene un nombre de fichero por linea guardando la salida en ficheros (uno por cada linea de i) cuyo nombre sera el leido en i añadiendole extension .tk, y que contendra una palabra en cada linea del fichero leido en i. Devolvera true si se realiza la tokenizacion de forma correcta de todos los archivos que contiene i; devolvera false en caso contrario enviando a cerr el mensaje correspondiente (p.ej. que no exista el archivo i, o que se trate de un directorio, enviando a "cerr" los archivos de i que no existan o que sean directorios; luego no se ha de interrumpir la ejecucion si hay algun archivo en i que no exista)
+    // Tokeniza el fichero i que contiene un nombre de fichero por linea guardando la salida en ficheros (uno por cada linea de i) cuyo nombre sera el leido en i aÃ±adiendole extension .tk, y que contendra una palabra en cada linea del fichero leido en i. Devolvera true si se realiza la tokenizacion de forma correcta de todos los archivos que contiene i; devolvera false en caso contrario enviando a cerr el mensaje correspondiente (p.ej. que no exista el archivo i, o que se trate de un directorio, enviando a "cerr" los archivos de i que no existan o que sean directorios; luego no se ha de interrumpir la ejecucion si hay algun archivo en i que no exista)
 
     bool TokenizarDirectorio (const string& i) const; 
-    // Tokeniza todos los archivos que contenga el directorio i, incluyendo los de los subdirectorios, guardando la salida en ficheros cuyo nombre sera el de entrada añadiendole extension .tk, y que contendra una palabra en cada linea del fichero. Devolvera true si se realiza la tokenizacion de forma correcta de todos los archivos; devolvera false en caso contrario enviando a cerr el mensaje correspondiente (p.ej. que no exista el directorio i, o los ficheros que no se hayan podido tokenizar)
+    // Tokeniza todos los archivos que contenga el directorio i, incluyendo los de los subdirectorios, guardando la salida en ficheros cuyo nombre sera el de entrada aÃ±adiendole extension .tk, y que contendra una palabra en cada linea del fichero. Devolvera true si se realiza la tokenizacion de forma correcta de todos los archivos; devolvera false en caso contrario enviando a cerr el mensaje correspondiente (p.ej. que no exista el directorio i, o los ficheros que no se hayan podido tokenizar)
 
     void DelimitadoresPalabra(const string& nuevoDelimiters); 
     // Inicializa delimiters a nuevoDelimiters, filtrando que no se introduzcan delimitadores repetidos (de izquierda a derecha, en cuyo caso se eliminarian los que hayan sido repetidos por la derecha)
 
     void AnyadirDelimitadoresPalabra(const string& nuevoDelimiters); // 
-    // Añade al final de "delimiters" los nuevos delimitadores que aparezcan en "nuevoDelimiters" (no se almacenaran caracteres repetidos)
+    // AÃ±ade al final de "delimiters" los nuevos delimitadores que aparezcan en "nuevoDelimiters" (no se almacenaran caracteres repetidos)
 
     string DelimitadoresPalabra() const; 
     // Devuelve "delimiters" 
