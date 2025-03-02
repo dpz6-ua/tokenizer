@@ -1,40 +1,22 @@
-#include <iostream> 
+#include <iostream>
 #include <string>
-#include <list> 
-#include "tokenizador.h"
+#include <list>
+#include <chrono>
+#include "../include/tokenizador.h"
 
 using namespace std;
+using namespace std::chrono;
 
-///////// Comprobación de que vacíe la lista resultado
+int main() {
+    auto start = high_resolution_clock::now();
 
-void imprimirListaSTL(const list<string>& cadena)
-{
-        list<string>::const_iterator itCadena;
-        for(itCadena=cadena.begin();itCadena!=cadena.end();itCadena++)
-        {
-                cout << (*itCadena) << ", ";
-        }
-        cout << endl;
-}
+    Tokenizador a("\t ,;:.-+/*_`'{}[]()!?&#\"\\<>", true, true);
+    a.TokenizarListaFicheros("listaFicheros.txt"); // TODO EL CORPUS
 
-int
-main(void)
-{
-	bool kCasosEspeciales = true, kpasarAminusculas = false;
+    auto end = high_resolution_clock::now();
+    duration<double> elapsed = end - start;
 
-	list<string> lt1, lt2;
+    cout << "Ha tardado " << elapsed.count() << " segundos" << endl;
 
-Tokenizador a("", true, false); 
-list<string> tokens; 
-
-a.Tokenizar("http:", tokens);
-	imprimirListaSTL(tokens);
-
-a.Tokenizar("http:////ab/", tokens);
-	imprimirListaSTL(tokens);
-
-a.Tokenizar("http:////ab.", tokens);
-	imprimirListaSTL(tokens);
-
-
+    return 0;
 }

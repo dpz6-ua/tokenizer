@@ -318,7 +318,7 @@ void Tokenizador::Tokenizar(const string& str, list<string>& tokens) const{
         strstr = quitarAcentosYMinusculas(str);
     }
 
-    tokens.clear();
+    //tokens.clear();
     size_t i = 0;
     string multipalabra = "";
     string acronimo = "";
@@ -387,84 +387,58 @@ void Tokenizador::Tokenizar(const string& str, list<string>& tokens) const{
     }
 }
 
-bool Tokenizador::Tokenizar(const string& i, const string& f) const{
-    // Tokeniza el fichero i guardando la salida en el fichero f (una
-    // palabra en cada linea del fichero). Devolvera true si se realiza la tokenizacion
-    // de forma correcta; false en caso contrario enviando a cerr el mensaje correspondiente
-    // (p.ej. que no exista el archivo i)
-    ifstream entrada;
-    ofstream salida;
-    string cadena;
-    list<string> tokens;
-
-    entrada.open(i.c_str());
-    if(!entrada) {
+bool Tokenizador::Tokenizar(const string& i, const string& f) const {
+    ifstream entrada(i);
+    if (!entrada) {
         cerr << "ERROR: No existe el archivo: " << i << endl;
         return false;
     }
-    else {
-        while(!entrada.eof()){
-            cadena="";
-            getline(entrada, cadena);
-            if(cadena.length() != 0) { 
-                Tokenizar(cadena, tokens);
-            }
+
+    list<string> tokens;
+    string cadena;
+
+    while (getline(entrada, cadena)) {
+        if (!cadena.empty()) { 
+            Tokenizar(cadena, tokens);
         }
-        entrada.close();
-        salida.open(f.c_str());
-        list<string>::iterator itS;
-        for(itS= tokens.begin(); itS!= tokens.end(); itS++)
-        {
-            salida << (*itS) << endl;
+    }
+    entrada.close();
+
+    if (!tokens.empty()) {
+        ofstream salida(f);
+        for (const auto& token : tokens) {
+            salida << token << '\n';
         }
-        salida.close();
-        return true;
     }
 
+    return true;
 }
 
-bool Tokenizador::Tokenizar (const string & i) const{
-    // Tokeniza el fichero i guardando la salida en un fichero de nombre i
-    // añadiendole extension .tk (sin eliminar previamente la extension de i por ejemplo,
-    // del archivo pp.txt se generaria el resultado en pp.txt.tk), y que contendra una palabra
-    // en cada linea del fichero. Devolvera true si se realiza la tokenizacion de forma correcta;
-    // false en caso contrario enviando a cerr el mensaje correspondiente (p.ej. que no exista el archivo i)
-    string f = i + ".tk";
-    return Tokenizar(i, f);
-
+bool Tokenizador::Tokenizar(const string& i) const {
+    return Tokenizar(i, i + ".tk");
 }
 
-bool Tokenizador::TokenizarListaFicheros(const string& i) const{
-    // Tokeniza el fichero i que contiene un nombre de fichero por linea guardando la salida en ficheros 
-    // (uno por cada linea de i) cuyo nombre sera el leido en i añadiendole extension .tk, y que contendra 
-    // una palabra en cada linea del fichero leido en i. Devolvera true si se realiza la tokenizacion de forma 
-    // correcta de todos los archivos que contiene i; devolvera false en caso contrario enviando a cerr el mensaje 
-    // correspondiente (p.ej. que no exista el archivo i, o que se trate de un directorio, enviando a "cerr" los archivos 
-    //de i que no existan o que sean directorios; luego no se ha de interrumpir la ejecucion si hay algun archivo en i que no exista)
-    ifstream entrada;
-    string cadena;
-    list<string> tokens;
-    string f;
-
-    entrada.open(i.c_str());
-    if(!entrada) {
+bool Tokenizador::TokenizarListaFicheros(const string& i) const {
+    ifstream entrada(i);
+    if (!entrada) {
         cerr << "ERROR: No existe el archivo: " << i << endl;
         return false;
     }
-    else {
-        while(!entrada.eof()){
-            cadena="";
-            getline(entrada, cadena);
-            if(cadena.length() != 0) { 
-                f = cadena + ".tk";
-                if (!Tokenizar(cadena, f)){
-                    cerr << "ERROR: No se ha podido tokenizar el archivo: " << cadena << endl;
-                }
+
+    string cadena;
+    bool resultado = true;
+
+    while (getline(entrada, cadena)) {
+        if (!cadena.empty()) {
+            string f = cadena + ".tk";
+            if (!Tokenizar(cadena, f)) {
+                cerr << "ERROR: No se ha podido tokenizar el archivo: " << cadena << endl;
+                resultado = false;
             }
         }
-        entrada.close();
-        return true;
     }
+
+    return resultado;
 }
 
 bool Tokenizador::TokenizarDirectorio(const string& i) const{
