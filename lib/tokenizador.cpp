@@ -318,7 +318,7 @@ void Tokenizador::Tokenizar(const string& str, list<string>& tokens) const{
         strstr = quitarAcentosYMinusculas(str);
     }
 
-    //tokens.clear();
+    tokens.clear();
     size_t i = 0;
     string multipalabra = "";
     string acronimo = "";
@@ -395,18 +395,20 @@ bool Tokenizador::Tokenizar(const string& i, const string& f) const {
     }
 
     list<string> tokens;
+    list<string> tokens2;
     string cadena;
 
     while (getline(entrada, cadena)) {
         if (!cadena.empty()) { 
             Tokenizar(cadena, tokens);
+            tokens2.splice(tokens2.end(), tokens);
         }
     }
     entrada.close();
 
     if (!tokens.empty()) {
         ofstream salida(f);
-        for (const auto& token : tokens) {
+        for (const auto& token : tokens2) {
             salida << token << '\n';
         }
     }
