@@ -87,63 +87,6 @@ string quitarAcentosYMinusculas(const string& texto) {
 }
 
 //////////////////////////////////////////////////////////
-////////////// Números decimales
-//////////////////////////////////////////////////////////
-
-bool esNumeroDecimal(const string &str, size_t &i, string &decimal, string delimiters){
-    size_t original_i = i;
-
-    if (str[i] == '$' || str[i] == '%'){
-        return false;
-    }
-
-    // Si el primer elemento es un ./, se añade el 0.
-    if ((str[i] == '.' || str[i] == ',')){
-        decimal += "0";
-        decimal += str[i];
-        i++;
-    }
-
-    while(i < str.size() && (delimiters.find(str[i]) == string::npos || (str[i] == '.' || str[i] == ',' || str[i] == '$' || str[i] == '%'))){
-        if (!isdigit(str[i]) && str[i] != '.' && str[i] != ',' && str[i] != '$' && str[i] != '%'){
-            i = original_i;
-            decimal = "";
-            return false;
-        }
-        if (str[i] == '.' || str[i] == ','){
-            if (str[i-1] == '.' || str[i-1] == ','){
-                break;
-            }
-        }
-        
-        if (str[i] == '$' || str[i] == '%'){
-            if (i+1 < str.size() && str[i+1] == ' ' && decimal.find('.') == string::npos && decimal.find(',') == string::npos){
-                decimal += str[i];
-                i++;
-                break;
-            }
-
-            if (i+1 < str.size() && str[i+1] != ' '){
-                i = original_i;
-                decimal = "";
-                return false;
-            }
-            else{
-                break;
-            }
-        }
-
-        decimal += str[i];
-        i++;
-    }
-
-    if (decimal[decimal.size() - 1] == '.' || decimal[decimal.size() - 1] == ',') 
-        decimal.pop_back();
-
-    return true;
-}
-
-//////////////////////////////////////////////////////////
 /////////////////// URL
 //////////////////////////////////////////////////////////
 
@@ -271,23 +214,89 @@ bool esEmail(const string &str, size_t &i, string &email, string delimiters){
     return true;
 }
 
+//////////////////////////////////////////////////////////
+////////////// Números decimales
+//////////////////////////////////////////////////////////
+
+bool esNumeroDecimal(const string &str, size_t &i, string &decimal, size_t lastPos, string delimiters){
+    size_t original_i = i;
+    string deciOriginal = decimal;
+/*
+    if (str[i] == '$' || str[i] == '%'){
+        return false;
+    }
+*/
+    // Si los elementos acumulados no son numeros, se devuelve false.
+    for (char c : decimal){
+        if (!isdigit(c)){
+            return false;
+        }
+    }
+
+    // Si el primer elemento es un ./, se añade el 0.
+    if (lastPos > 0 && (str[lastPos - 1] == '.' || str[lastPos - 1] == ',')) {
+        decimal = "0" + str[lastPos - 1] + decimal;
+    }
+        
+    decimal += str[i];
+    i++; // Saltarse el primer ./,
+
+    while(i < str.size() && (delimiters.find(str[i]) == string::npos || (str[i] == '.' || str[i] == ','))) {   // || str[i] == '$' || str[i] == '%'))){
+        if (!isdigit(str[i]) && str[i] != '.' && str[i] != ','){  // && str[i] != '$' && str[i] != '%'){
+            i = original_i;
+            decimal = deciOriginal;
+            return false;
+        }
+
+        if (str[i] == '.' || str[i] == ','){
+            if (i+1 < str.size() && delimiters.find(str[i+1]) != string::npos){
+                i++;
+                break;
+            }
+        }
+
+        decimal += str[i];
+        i++;
+    }
+
+    if (decimal[decimal.size() - 1] == '.' || decimal[decimal.size() - 1] == ',') 
+        decimal.pop_back();
+    return true;
+}
+
 void Tokenizador::Tokenizar(const string& str, list<string>& tokens) const {
     tokens.clear();
     string strstr = pasarAminuscSinAcentos ? quitarAcentosYMinusculas(str) : str;
     bool anadido = false;
+    bool nonum = false;
 
     string::size_type lastPos = strstr.find_first_not_of(delimiters, 0);
+    //cout << "lastPos: " << lastPos << endl;
     string::size_type pos = strstr.find_first_of(delimiters, lastPos);
 
     while (lastPos != string::npos) {
         string tok = strstr.substr(lastPos, pos - lastPos);
         anadido = false;
-        //cout << "tok: " << tok << " pos: " << pos << endl;
+        nonum = false;
+        //cout << "tok: " << tok << " pos: " << pos << " lastPos: " << lastPos << endl;
+        //cout << "lastpos-1: " << lastPos - 1 << endl;
+        //cout << "lastpos -1: " << strstr[lastPos - 1] << endl;
 
         if (casosEspeciales) {
 
             if (esURL(strstr, lastPos)) {
                 tokens.push_back(extraerURL(strstr, pos, tok, delimiters));
+                anadido = true;
+            }
+
+            //cout << "lastpos-1: " << lastPos - 1 << endl;
+            //cout << "lastpos -1: " << strstr[lastPos - 1] << endl;
+
+            if (((strstr[pos] == '.' || strstr[pos] == ',')
+                || (lastPos > 0 && (strstr[lastPos - 1] == '.' || strstr[lastPos - 1] == ',')))
+                && !anadido && esNumeroDecimal(strstr, pos, tok, lastPos, delimiters)) {
+                //cout << "Numero: " << tok << endl;
+                tokens.push_back(tok);
                 anadido = true;
             }
 
