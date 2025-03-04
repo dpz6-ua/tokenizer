@@ -87,88 +87,6 @@ string quitarAcentosYMinusculas(const string& texto) {
 }
 
 //////////////////////////////////////////////////////////
-/////////////////// URL
-//////////////////////////////////////////////////////////
-
-bool esURL(const string& str, size_t i) {
-    return (str.substr(i, 5) == "http:"  && i + 6 < str.size()) ||
-           (str.substr(i, 6) == "https:" && i + 7 < str.size()) ||
-           (str.substr(i, 4) == "ftp:"   && i + 5 < str.size());
-}
-
-string extraerURL(const string& str, size_t& pos, string delimiters) {
-    size_t start = pos;
-    string especiales = "_:/.?&-=#@";
-    string delimitadores = delimiters;
-    for (size_t i = 0; i < delimitadores.size(); i++){
-        if (especiales.find(delimitadores[i]) != string::npos){
-            delimitadores.erase(i, 1);
-            i--;
-        }
-    }
-
-    while (pos < str.size() && delimitadores.find(str[pos]) == string::npos) {
-        pos++;
-    }
-
-    return str.substr(start, pos - start);
-}
-
-//////////////////////////////////////////////////////////
-////////////// Multipalabra
-//////////////////////////////////////////////////////////
-
-bool esMultipalabra(const string &str, size_t &i, string delimiters, string &multipalabra) {
-    size_t original_i = i;
-
-    while (i < str.size() && (delimiters.find(str[i]) == string::npos || (str[i] == '-' && i+1 < str.size() && str[i + 1] != '-'))) {
-        if (!isalnum(str[i]) && str[i] != '-') {
-            i = original_i;
-            multipalabra = "";
-            return false;
-        }
-        multipalabra += str[i];
-        i++;
-    }
-
-    if (multipalabra[multipalabra.size() - 1] == '-') 
-        multipalabra.pop_back();
-
-    return true;
-}
-
-//////////////////////////////////////////////////////////
-////////////// Acrónimo
-//////////////////////////////////////////////////////////
-
-bool esAcronimo(const string &str, size_t &i, string &acronimo, string delimiters) {
-    size_t original_i = i;
-    //cout << "Entra en acronimo" << endl;
-    while (i < str.size() && (delimiters.find(str[i]) == string::npos || (str[i] == '.'))) {
-        //cout << "Acronimo: " << acronimo << endl;
-        if (i+1 < str.size() && str[i] == '.' && str[i+1] == '.'){
-            if (acronimo.find('.') != string::npos){
-                return true;
-            }
-            i = original_i;
-            acronimo = "";
-            return false;
-        }
-        acronimo += str[i];
-        i++;
-    }
-
-    if (acronimo[acronimo.size() - 1] == '.') 
-        acronimo.pop_back();
-    if (acronimo.find('.') == string::npos){
-        i = original_i;
-        acronimo = "";
-        return false;
-    }
-    return true;
-}
-
-//////////////////////////////////////////////////////////
 ////////////// Números decimales
 //////////////////////////////////////////////////////////
 
@@ -226,54 +144,122 @@ bool esNumeroDecimal(const string &str, size_t &i, string &decimal, string delim
 }
 
 //////////////////////////////////////////////////////////
+/////////////////// URL
+//////////////////////////////////////////////////////////
+
+bool esURL(const string& str, size_t i) {
+    return (i + 4 < str.size() && str.substr(i, 4) == "http") ||
+           (i + 5 < str.size() && str.substr(i, 5) == "https") ||
+           (i + 3 < str.size() && str.substr(i, 3) == "ftp");
+}
+
+string extraerURL(const string& str, size_t& pos, string token, string delimiters) {
+    if (pos == string::npos) {
+        return token;
+    }
+    size_t start = pos;
+    string especiales = "_:/.?&-=#@";
+    for (size_t i = 0; i < delimiters.size(); i++){
+        if (especiales.find(delimiters[i]) != string::npos){
+            delimiters.erase(i, 1);
+            i--;
+        }
+    }
+
+    while (pos < str.size() && delimiters.find(str[pos]) == string::npos) {
+        pos++;
+    }
+
+    return (pos == start + 1) ? token : token + str.substr(start, pos - start);
+}
+
+//////////////////////////////////////////////////////////
+////////////// Acrónimo
+//////////////////////////////////////////////////////////
+
+bool esAcronimo(const string &str, size_t &i, string &acronimo, string delimiters) {
+    size_t original_i = i;
+
+    //cout << "Entra en acronimo" << endl;
+    while (i < str.size() && (delimiters.find(str[i]) == string::npos || (str[i] == '.'))) {
+        //cout << "Acronimo: " << acronimo << endl;
+        if (i+1 < str.size() && str[i] == '.' && delimiters.find(str[i+1]) != string::npos) {
+            i++;
+            return true;
+        }
+        acronimo += str[i];
+        i++;
+    }
+
+    if (acronimo[acronimo.size() - 1] == '.') 
+        acronimo.pop_back();
+
+    return true;
+}
+
+//////////////////////////////////////////////////////////
+////////////// Multipalabra
+//////////////////////////////////////////////////////////
+
+bool esMultipalabra(const string &str, size_t &i, string delimiters, string &multipalabra) {
+    size_t original_i = i;
+
+    //cout << "Entra en acronimo" << endl;
+    while (i < str.size() && (delimiters.find(str[i]) == string::npos || (str[i] == '-'))) {
+        //cout << "Acronimo: " << acronimo << endl;
+        if (i+1 < str.size() && str[i] == '-' && delimiters.find(str[i+1]) != string::npos) {
+            i++;
+            return true;
+        }
+        multipalabra += str[i];
+        i++;
+    }
+
+    if (multipalabra[multipalabra.size() - 1] == '-') 
+        multipalabra.pop_back();
+
+    return true;
+}
+
+//////////////////////////////////////////////////////////
 ////////////// EMAIL
 //////////////////////////////////////////////////////////
 
 bool esEmail(const string &str, size_t &i, string &email, string delimiters){
     size_t original = i;
     string especiales = "@.-_";
-    string primarroba = "";
-    bool hayarroba = false;
-    int arrobacount = 0;
-
-    while (i < str.size() && (delimiters.find(str[i]) == string::npos || (especiales.find(str[i]) != string::npos))) {
-        if ((str[i] == '.' || str[i] == '-' || str[i] == '_') && !hayarroba) {
-            i = original;
-            email = "";
-            return false;
+    string tok = email;
+    for (size_t i = 0; i < delimiters.size(); i++){
+        if (especiales.find(delimiters[i]) != string::npos){
+            delimiters.erase(i, 1);
+            i--;
         }
+    }
 
+    if (i+1 < str.size() && (str[i+1] == '.' || str[i+1] == '-' || str[i+1] == '_')){
+        i += 2; // saltarse arroba y elemento
+        return true;
+    }
+
+    //añadir arroba
+    email += str[i];
+    i++;
+
+    while (i < str.size() && delimiters.find(str[i]) == string::npos) {
+        if (str[i] == '@'){
+            //cout << "de aqui" << endl;
+            i = original + 1; //saltarse la arroba
+            email = tok;
+            break;
+        }
         if (str[i] == '.' || str[i] == '-' || str[i] == '_'){
             if (i+1 < str.size() && (str[i+1] == '.' || str[i+1] == '-' || str[i+1] == '_')){
-                return true;
-            }
-        }
-
-        if (str[i] == '@'){
-            if (i+1 < str.size() && (str[i+1] == '.' || str[i+1] == '-' || str[i+1] == '_')){
                 i++;
-                return true;
+                break;
             }
-            hayarroba = true;
-            arrobacount++;
-            if (arrobacount > 1){
-                i = original + primarroba.size();
-                email = primarroba;
-                return true;
-            }
-        }
-
-        if (!hayarroba){
-            primarroba += str[i];
         }
         email += str[i];
         i++;
-    }
-
-    if (email.find('@') == string::npos){
-        i = original;
-        email = "";
-        return false;
     }
 
     if (email[email.size() - 1] == '.' || email[email.size() - 1] == '-' || email[email.size() - 1] == '_') 
@@ -288,41 +274,52 @@ bool esEmail(const string &str, size_t &i, string &email, string delimiters){
 void Tokenizador::Tokenizar(const string& str, list<string>& tokens) const {
     tokens.clear();
     string strstr = pasarAminuscSinAcentos ? quitarAcentosYMinusculas(str) : str;
+    bool anadido = false;
 
     string::size_type lastPos = strstr.find_first_not_of(delimiters, 0);
     string::size_type pos = strstr.find_first_of(delimiters, lastPos);
 
     while (lastPos != string::npos) {
         string tok = strstr.substr(lastPos, pos - lastPos);
+        anadido = false;
+        //cout << "tok: " << tok << " pos: " << pos << endl;
 
         if (casosEspeciales) {
-            size_t tempIndex = lastPos;
-            string specialToken;
 
-            // Detectar multipalabra
-            if (delimitadorSet.count('-') && esMultipalabra(strstr, tempIndex, delimiters, specialToken)) {
-                tokens.push_back(specialToken);
-                lastPos = tempIndex;
+            if (esURL(strstr, lastPos)) {
+                tokens.push_back(extraerURL(strstr, pos, tok, delimiters));
+                anadido = true;
             }
+
+            if (strstr[pos] == '@' && !anadido && esEmail(strstr, pos, tok, delimiters)) {
+                //cout << "Email: " << tok << endl;
+                tokens.push_back(tok);
+                anadido = true;
+            }
+
+            if (strstr[pos] == '.' && !anadido && esAcronimo(strstr, pos, tok, delimiters)) {
+                //cout << "Acronimo: " << tok << endl;
+                tokens.push_back(tok);
+                anadido = true;
+            }
+
+            if (strstr[pos] == '-' && !anadido && esMultipalabra(strstr, pos, delimiters, tok)) {
+                //cout << "Multipalabra: " << tok << endl;
+                tokens.push_back(tok);
+                anadido = true;
+            }
+
+            if (!anadido){
+                tokens.push_back(tok);
+            }
+
+            /*
             // Detectar número decimal
             else if (delimitadorSet.count('.') && delimitadorSet.count(',') && esNumeroDecimal(strstr, tempIndex, specialToken, delimiters)) {
                 tokens.push_back(specialToken);
                 lastPos = tempIndex;
             }
-            // Detectar email
-            else if (delimitadorSet.count('@') && esEmail(strstr, tempIndex, specialToken, delimiters)) {
-                tokens.push_back(specialToken);
-                lastPos = tempIndex;
-            }
-            // Detectar acrónimo
-            else if (delimitadorSet.count('.') && esAcronimo(strstr, tempIndex, specialToken, delimiters)) {
-                tokens.push_back(specialToken);
-                lastPos = tempIndex;
-            }
-            // No es un caso especial, agregar el token normal
-            else {
-                tokens.push_back(tok);
-            }
+            */
         } else {
             tokens.push_back(tok);
         }
