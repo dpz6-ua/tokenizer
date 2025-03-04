@@ -285,89 +285,51 @@ bool esEmail(const string &str, size_t &i, string &email, string delimiters){
     return true;
 }
 
-void Tokenizador::Tokenizar(const string& str, list<string>& tokens) const{
-    // Tokeniza str devolviendo el resultado en tokens. La lista tokens se
-    // vaciará antes de almacenar el resultado de la tokenización.
-
-    /*
+void Tokenizador::Tokenizar(const string& str, list<string>& tokens) const {
     tokens.clear();
-    string::size_type lastPos = str.find_first_not_of(delimiters,0);
-    string::size_type pos = str.find_first_of(delimiters,lastPos);
-
-    while(string::npos != pos || string::npos != lastPos){
-        tokens.push_back(str.substr(lastPos, pos - lastPos));
-        lastPos = str.find_first_not_of(delimiters, pos);
-        pos = str.find_first_of(delimiters, lastPos);
-    }
-    */
-
     string strstr = pasarAminuscSinAcentos ? quitarAcentosYMinusculas(str) : str;
 
-    tokens.clear();
-    size_t i = 0;
-    string tok = "";
-    bool guion = delimitadorSet.count('-');
-    bool punto = delimitadorSet.count('.');
-    bool coma = delimitadorSet.count(',');
-    bool arroba = delimitadorSet.count('@');
-    bool puedeSerDecimal = false;
+    string::size_type lastPos = strstr.find_first_not_of(delimiters, 0);
+    string::size_type pos = strstr.find_first_of(delimiters, lastPos);
 
-    while (i < strstr.size()){
-        // Saltar delimitadores iniciales a menos que pueda ser decimal
-        while (i < strstr.size() && delimitadorSet.count(strstr[i])) {
-            if ((strstr[i] == '.' || strstr[i] == ',') && (i+1 < strstr.size() && isdigit(strstr[i+1]))){
-                puedeSerDecimal = true;
-                break;
+    while (lastPos != string::npos) {
+        string tok = strstr.substr(lastPos, pos - lastPos);
+
+        if (casosEspeciales) {
+            size_t tempIndex = lastPos;
+            string specialToken;
+
+            // Detectar multipalabra
+            if (delimitadorSet.count('-') && esMultipalabra(strstr, tempIndex, delimiters, specialToken)) {
+                tokens.push_back(specialToken);
+                lastPos = tempIndex;
             }
-            i++;
+            // Detectar número decimal
+            else if (delimitadorSet.count('.') && delimitadorSet.count(',') && esNumeroDecimal(strstr, tempIndex, specialToken, delimiters)) {
+                tokens.push_back(specialToken);
+                lastPos = tempIndex;
+            }
+            // Detectar email
+            else if (delimitadorSet.count('@') && esEmail(strstr, tempIndex, specialToken, delimiters)) {
+                tokens.push_back(specialToken);
+                lastPos = tempIndex;
+            }
+            // Detectar acrónimo
+            else if (delimitadorSet.count('.') && esAcronimo(strstr, tempIndex, specialToken, delimiters)) {
+                tokens.push_back(specialToken);
+                lastPos = tempIndex;
+            }
+            // No es un caso especial, agregar el token normal
+            else {
+                tokens.push_back(tok);
+            }
+        } else {
+            tokens.push_back(tok);
         }
 
-        // Salir del bucle cuando se llegue al final del string
-        if (i == strstr.size()) 
-            break;
-
-        size_t start_token = i;
-        if (casosEspeciales){
-            if (!puedeSerDecimal && esURL(strstr, i)){
-                string url = extraerURL(strstr, i, delimiters);
-                tokens.push_back(url);
-                continue;
-            }
-            if (punto && coma && esNumeroDecimal(strstr, i, tok, delimiters)){
-                tokens.push_back(tok);
-                puedeSerDecimal = false;
-                tok = "";
-                continue;
-            }
-            if (!puedeSerDecimal && arroba && esEmail(strstr, i, tok, delimiters)){
-                tokens.push_back(tok);
-                tok = "";
-                continue;
-            }
-            if (!puedeSerDecimal && punto && esAcronimo(strstr, i, tok, delimiters)){
-                tokens.push_back(tok);
-                tok = "";
-                continue;
-            }
-            if (!puedeSerDecimal && guion && esMultipalabra(strstr, i, delimiters, tok)){
-                tokens.push_back(tok);
-                tok = "";
-                continue;
-            }
-            
-        }
-        
-        //No se ha detectado el punto ni la coma como número decimal
-        if (puedeSerDecimal){
-            puedeSerDecimal = false;
-            i++;
-        }
-        else{
-            while (i < strstr.size() && !delimitadorSet.count(strstr[i])) {
-                i++;
-            }
-            tokens.push_back(strstr.substr(start_token, i - start_token));
-        }
+        // Avanzar al siguiente token
+        lastPos = strstr.find_first_not_of(delimiters, pos);
+        pos = strstr.find_first_of(delimiters, lastPos);
     }
 }
 
