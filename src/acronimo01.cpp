@@ -1,11 +1,11 @@
 #include <iostream> 
 #include <string>
 #include <list> 
-#include "../include/tokenizador.h"
+#include "tokenizador.h"
 
 using namespace std;
 
-///////// ComprobaciÃ³n de que vacÃ­e la lista resultado
+///////// Comprobación de que vacíe la lista resultado
 
 void imprimirListaSTL(const list<string>& cadena)
 {
@@ -24,16 +24,16 @@ main(void)
 
 	list<string> lt1, lt2;
 
-        Tokenizador a("@.&", true, false); 
-        list<string> tokens; 
+Tokenizador a("@.&", true, false); 
+list<string> tokens; 
 
-        a.Tokenizar("U..S.A p1 e..g. p2. La", lt1);
-        imprimirListaSTL(lt1);
-        
-        a.Tokenizar("...U.S.A p1 e..g. p2. La", lt1);
-        imprimirListaSTL(lt1);
+a.Tokenizar("U..S.A p1 e..g. p2. La", lt1);
+imprimirListaSTL(lt1);
 
-        a.Tokenizar("Hack.4.Good p1 ", lt1);
-        imprimirListaSTL(lt1);
+a.Tokenizar("...U.S.A p1 e..g. p2. La", lt1);
+imprimirListaSTL(lt1);
+
+a.Tokenizar("Hack.4.Good p1 ", lt1);
+imprimirListaSTL(lt1);
 
 }

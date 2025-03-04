@@ -6,6 +6,8 @@
 #include <fstream>
 #include <cctype>
 #include <algorithm>
+#include <unordered_map>
+#include <unordered_set>
 using namespace std;
 
 class Tokenizador {
@@ -65,7 +67,8 @@ public:
 
 
 private:
-    string delimiters;		
+    string delimiters;	
+    unordered_set<char> delimitadorSet;	
     // Delimitadores de terminos. Aunque se modifique la forma de almacenamiento interna para mejorar la eficiencia, este campo debe permanecer para indicar el orden en que se introdujeron los delimitadores
     bool casosEspeciales;
     // Si true detectara palabras compuestas y casos especiales. Sino, trabajara al igual que el algoritmo propuesto en la seccion "Version del tokenizador vista en clase"

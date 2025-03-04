@@ -5,7 +5,7 @@
 
 using namespace std;
 
-///////// Comprobación de que vacíe la lista resultado
+///////// ComprobaciÃ³n de que vacÃ­e la lista resultado
 
 void imprimirListaSTL(const list<string>& cadena)
 {
@@ -24,10 +24,11 @@ main(void)
 
 	list<string> lt1, lt2;
 
-Tokenizador a("@.,&", true, false); 
-list<string> tokens; 
+Tokenizador a("", true, false); 
+list<string> tokens;
+a.DelimitadoresPalabra("@.,&"); 
 
-a.Tokenizar(".35 ...10.000.a.000 ,,23.05 10/12/85 1,23E+10", lt1);
-imprimirListaSTL(lt1);
+a.Tokenizar("pal1 10.35% 10,35% 23.000,3% 23,5$ 23.05$ 23,05$ 11.1$ 11.05$ 3.4% 4,3% 9$ 7% 9,56%@ 9,56% @", tokens); 
+	imprimirListaSTL(tokens);
 
 }

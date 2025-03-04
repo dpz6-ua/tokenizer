@@ -1,27 +1,27 @@
 #include "../include/tokenizador.h"
 #include <unistd.h>
 #include <dirent.h>
-#include <unordered_map>
 
 Tokenizador::Tokenizador(const string& delimitadoresPalabra, const bool& kcasosEspeciales, const bool& minuscSinAcentos){
     // Inicializa delimiters a delimitadoresPalabra filtrando que no se introduzcan delimitadores repetidos 
     // (de izquierda a derecha, en cuyo caso se eliminarian los que hayan sido repetidos por la derecha); 
     // casosEspeciales a kcasosEspeciales; pasarAminuscSinAcentos a minuscSinAcentos
     for (auto c : delimitadoresPalabra){
-        if (delimiters.find(c) == string::npos){
+        if (delimitadorSet.insert(c).second) { // Si es un nuevo caracter, lo añadimos a delimiters
             delimiters += c;
         }
     }
 
-    if (delimiters.find(" ") == string::npos){
-        if (kcasosEspeciales){
-            delimiters += " ";
+    if (delimitadorSet.find(' ') == delimitadorSet.end()) {
+        if (kcasosEspeciales) {
+            delimiters += ' ';
+            delimitadorSet.insert(' ');
         }
         espacio = false;
-    }
-    else{
+    } else {
         espacio = true;
     }
+
     casosEspeciales = kcasosEspeciales;
     pasarAminuscSinAcentos = minuscSinAcentos;
 }
@@ -29,6 +29,7 @@ Tokenizador::Tokenizador(const string& delimitadoresPalabra, const bool& kcasosE
 Tokenizador::Tokenizador(const Tokenizador& t){
     // Constructor de copia
     this->delimiters = t.delimiters;
+    this->delimitadorSet = t.delimitadorSet;
     this->casosEspeciales = t.casosEspeciales;
     this->pasarAminuscSinAcentos = t.pasarAminuscSinAcentos;
     this->espacio = t.espacio;
@@ -40,16 +41,22 @@ Tokenizador::Tokenizador(){
     casosEspeciales = true;
     pasarAminuscSinAcentos = false;
     espacio = true;
+
+    for (char c : delimiters) {
+        delimitadorSet.insert(c);
+    }
 }
 
 Tokenizador::~Tokenizador (){	
     // Pone delimiters=""
     delimiters = "";
+    delimitadorSet.clear();
 }
 
 Tokenizador &Tokenizador::operator=(const Tokenizador& t){
     if (this != &t){
         this->delimiters = t.delimiters;
+        this->delimitadorSet = t.delimitadorSet;
         this->casosEspeciales = t.casosEspeciales;
         this->pasarAminuscSinAcentos = t.pasarAminuscSinAcentos;
         this->espacio = t.espacio;
@@ -83,28 +90,10 @@ string quitarAcentosYMinusculas(const string& texto) {
 /////////////////// URL
 //////////////////////////////////////////////////////////
 
-bool esURL(const string str, size_t i){
-    // Devuelve true si la cadena str es una URL
-    if (str.substr(i, 5) == "http:"){
-        if (i+6 >= str.size()){
-            return false;
-        }
-        return true;
-    }
-    if (str.substr(i, 6) == "https:"){
-        if (i+7 >= str.size()){
-            return false;
-        }
-        return true;
-    }
-    if (str.substr(i, 4) == "ftp:"){
-        if (i+5 >= str.size()){
-            return false;
-        }
-        return true;
-    }
-    return false;
-    
+bool esURL(const string& str, size_t i) {
+    return (str.substr(i, 5) == "http:"  && i + 6 < str.size()) ||
+           (str.substr(i, 6) == "https:" && i + 7 < str.size()) ||
+           (str.substr(i, 4) == "ftp:"   && i + 5 < str.size());
 }
 
 string extraerURL(const string& str, size_t& pos, string delimiters) {
@@ -311,34 +300,29 @@ void Tokenizador::Tokenizar(const string& str, list<string>& tokens) const{
         pos = str.find_first_of(delimiters, lastPos);
     }
     */
-    
-    string strstr = str;
 
-    if (pasarAminuscSinAcentos){
-        strstr = quitarAcentosYMinusculas(str);
-    }
+    string strstr = pasarAminuscSinAcentos ? quitarAcentosYMinusculas(str) : str;
 
     tokens.clear();
     size_t i = 0;
-    string multipalabra = "";
-    string acronimo = "";
-    string decimal = "";
-    string email = "";
-    bool guion = delimiters.find('-') != string::npos;
-    bool punto = delimiters.find('.') != string::npos;
-    bool coma = delimiters.find(',') != string::npos;
-    bool arroba = delimiters.find('@') != string::npos;
+    string tok = "";
+    bool guion = delimitadorSet.count('-');
+    bool punto = delimitadorSet.count('.');
+    bool coma = delimitadorSet.count(',');
+    bool arroba = delimitadorSet.count('@');
     bool puedeSerDecimal = false;
 
     while (i < strstr.size()){
         // Saltar delimitadores iniciales a menos que pueda ser decimal
-        while (i < strstr.size() && delimiters.find(strstr[i]) != string::npos) {
+        while (i < strstr.size() && delimitadorSet.count(strstr[i])) {
             if ((strstr[i] == '.' || strstr[i] == ',') && (i+1 < strstr.size() && isdigit(strstr[i+1]))){
                 puedeSerDecimal = true;
                 break;
             }
             i++;
         }
+
+        // Salir del bucle cuando se llegue al final del string
         if (i == strstr.size()) 
             break;
 
@@ -349,25 +333,25 @@ void Tokenizador::Tokenizar(const string& str, list<string>& tokens) const{
                 tokens.push_back(url);
                 continue;
             }
-            if (punto && coma && esNumeroDecimal(strstr, i, decimal, delimiters)){
-                tokens.push_back(decimal);
+            if (punto && coma && esNumeroDecimal(strstr, i, tok, delimiters)){
+                tokens.push_back(tok);
                 puedeSerDecimal = false;
-                decimal = "";
+                tok = "";
                 continue;
             }
-            if (!puedeSerDecimal && arroba && esEmail(strstr, i, email, delimiters)){
-                tokens.push_back(email);
-                email = "";
+            if (!puedeSerDecimal && arroba && esEmail(strstr, i, tok, delimiters)){
+                tokens.push_back(tok);
+                tok = "";
                 continue;
             }
-            if (!puedeSerDecimal && punto && esAcronimo(strstr, i, acronimo, delimiters)){
-                tokens.push_back(acronimo);
-                acronimo = "";
+            if (!puedeSerDecimal && punto && esAcronimo(strstr, i, tok, delimiters)){
+                tokens.push_back(tok);
+                tok = "";
                 continue;
             }
-            if (!puedeSerDecimal && guion && esMultipalabra(strstr, i, delimiters, multipalabra)){
-                tokens.push_back(multipalabra);
-                multipalabra = "";
+            if (!puedeSerDecimal && guion && esMultipalabra(strstr, i, delimiters, tok)){
+                tokens.push_back(tok);
+                tok = "";
                 continue;
             }
             
@@ -379,7 +363,7 @@ void Tokenizador::Tokenizar(const string& str, list<string>& tokens) const{
             i++;
         }
         else{
-            while (i < strstr.size() && delimiters.find(strstr[i]) == string::npos) {
+            while (i < strstr.size() && !delimitadorSet.count(strstr[i])) {
                 i++;
             }
             tokens.push_back(strstr.substr(start_token, i - start_token));
@@ -476,31 +460,29 @@ void Tokenizador::DelimitadoresPalabra(const string& nuevoDelimiters){
     // Inicializa delimiters a nuevoDelimiters, filtrando que no se introduzcan delimitadores repetidos 
     // (de izquierda a derecha, en cuyo caso se eliminarian los que hayan sido repetidos por la derecha)
     delimiters = "";
-    bool found_espacio = false;
+    delimitadorSet.clear();
+    espacio = false;
+
     for (auto c : nuevoDelimiters){
-        if (delimiters.find(c) == string::npos){
+        if (delimitadorSet.insert(c).second) {  // Solo inserta si no está repetido
             delimiters += c;
-            if (c == ' '){
-                found_espacio = true;
-                this->espacio = true;
+            if (c == ' ') {
+                espacio = true;
             }
         }
     }
 
-    if (!found_espacio){
-        this->espacio = false;
-        if (casosEspeciales){
-            delimiters += " ";
-        }
+    if (!espacio && casosEspeciales) {
+        delimiters += ' ';
+        delimitadorSet.insert(' ');
     }
-
 }
 
 void Tokenizador::AnyadirDelimitadoresPalabra(const string& nuevoDelimiters){ 
     // Añade al final de "delimiters" los nuevos delimitadores que aparezcan en "nuevoDelimiters" 
     // (no se almacenaran caracteres repetidos)
-    for (auto c : nuevoDelimiters){
-        if (delimiters.find(c) == string::npos){
+    for (char c : nuevoDelimiters) {
+        if (delimitadorSet.insert(c).second) {  // Solo inserta si no está repetido
             delimiters += c;
         }
     }
@@ -514,10 +496,11 @@ string Tokenizador::DelimitadoresPalabra() const{
 void Tokenizador::CasosEspeciales(const bool& nuevoCasosEspeciales){
     // Cambia la variable privada "casosEspeciales"
     this->casosEspeciales = nuevoCasosEspeciales;
-    if (!this->espacio && !nuevoCasosEspeciales){
-        size_t pos = delimiters.find(" ");
-        if (pos != string::npos){
-            delimiters.erase(pos, 1);
+    if (!this->espacio && !nuevoCasosEspeciales) {
+        auto it = delimitadorSet.find(' ');
+        if (it != delimitadorSet.end()) {
+            delimitadorSet.erase(it);  // Eliminar el espacio del set
+            delimiters.erase(std::remove(delimiters.begin(), delimiters.end(), ' '), delimiters.end());  // Eliminarlo del string
         }
     }
 }

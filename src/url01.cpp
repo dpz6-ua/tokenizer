@@ -1,11 +1,11 @@
 #include <iostream> 
 #include <string>
 #include <list> 
-#include "../include/tokenizador.h"
+#include "tokenizador.h"
 
 using namespace std;
 
-///////// Comprobaciï¿½n de que vacï¿½e la lista resultado
+///////// Comprobación de que vacíe la lista resultado
 
 void imprimirListaSTL(const list<string>& cadena)
 {

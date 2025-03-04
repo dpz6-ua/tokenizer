@@ -1,11 +1,11 @@
-#include <iostream> 
+#include <iostream>
 #include <string>
-#include <list> 
+#include <list>
 #include "tokenizador.h"
 
 using namespace std;
 
-///////// Comprobación de que vacíe la lista resultado
+///////// ComprobaciÃ³n de que vacÃ­e la lista resultado
 
 void imprimirListaSTL(const list<string>& cadena)
 {
@@ -20,14 +20,16 @@ void imprimirListaSTL(const list<string>& cadena)
 int
 main(void)
 {
-	bool kCasosEspeciales = true, kpasarAminusculas = false;
+        bool kCasosEspeciales = true, kpasarAminusculas = false;
 
-	list<string> lt1, lt2;
+        list<string> lt1, lt2;
 
-Tokenizador a("@.,&", true, false); 
-list<string> tokens; 
+Tokenizador a("@.&", true, false);
+list<string> tokens;
 
-a.Tokenizar(".35 ...10.000.a.000 ,,23.05 10/12/85 1,23E+10", lt1);
-imprimirListaSTL(lt1);
+a.DelimitadoresPalabra(""); 
+
+a.Tokenizar("3..2 4,,,,5 ..35", lt1); 
+         imprimirListaSTL(lt1);
 
 }
