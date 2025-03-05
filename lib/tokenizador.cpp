@@ -221,18 +221,15 @@ bool esEmail(const string &str, size_t &i, string &email, string delimiters){
 bool esNumeroDecimal(const string &str, size_t &i, string &decimal, size_t lastPos, string delimiters){
     size_t original_i = i;
     string deciOriginal = decimal;
-/*
-    if (str[i] == '$' || str[i] == '%'){
-        return false;
-    }
-*/
+    bool puntocoma = false;
+    size_t auxPos = i;
+
     // Si los elementos acumulados no son numeros, se devuelve false.
     for (char c : decimal){
         if (!isdigit(c)){
             return false;
         }
     }
-
     // Si el primer elemento es un ./, se añade el 0.
     if (lastPos > 0 && (str[lastPos - 1] == '.' || str[lastPos - 1] == ',')) {
         decimal = "0" + std::string(1, str[lastPos - 1]) + decimal;
@@ -251,8 +248,28 @@ bool esNumeroDecimal(const string &str, size_t &i, string &decimal, size_t lastP
         }
 
         if (str[i] == '.' || str[i] == ','){
+            puntocoma = true;
+            auxPos = i;
             if (i+1 < str.size() && delimiters.find(str[i+1]) != string::npos){
                 i++;
+                break;
+            }
+        }
+
+        if (str[i] == '$' || str[i] == '%'){
+            if (i+1 < str.size() && str[i+1] == ' ' && !puntocoma){
+                decimal += str[i];
+                i++;
+                break;
+            }
+            if (i+1 < str.size() && delimiters.find(str[i+1]) != string::npos){
+                if (str[i+1] == ' ')
+                    break;
+                decimal = str.substr(original_i - 1, auxPos - (original_i - 1));
+                i = auxPos;
+                break;
+            }
+            if (i+1 == str.size()){
                 break;
             }
         }
