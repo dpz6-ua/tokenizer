@@ -64,17 +64,17 @@ Tokenizador &Tokenizador::operator=(const Tokenizador& t){
     return *this;
 }
 
-string quitarAcentosYMinusculas(const string& texto) {
-    unordered_map<char, char> conversion = {
-        {'Á', 'a'}, {'É', 'e'}, {'Í', 'i'}, {'Ó', 'o'}, {'Ú', 'u'}, {'Ü', 'u'},
-        {'á', 'a'}, {'é', 'e'}, {'í', 'i'}, {'ó', 'o'}, {'ú', 'u'}, {'ü', 'u'},
-        {'À', 'a'}, {'È', 'e'}, {'Ì', 'i'}, {'Ò', 'o'}, {'Ù', 'u'},
-        {'à', 'a'}, {'è', 'e'}, {'ì', 'i'}, {'ò', 'o'}, {'ù', 'u'},
-        {'Â', 'a'}, {'Ê', 'e'}, {'Î', 'i'}, {'Ô', 'o'}, {'Û', 'u'},
-        {'â', 'a'}, {'ê', 'e'}, {'î', 'i'}, {'ô', 'o'}, {'û', 'u'},
-        {'Ã', 'a'}, {'Õ', 'o'}, {'ã', 'a'}, {'õ', 'o'}, {'Ñ', 'ñ'}
-    };
+unordered_map<char, char> conversion = {
+    {'Á', 'a'}, {'É', 'e'}, {'Í', 'i'}, {'Ó', 'o'}, {'Ú', 'u'}, {'Ü', 'u'},
+    {'á', 'a'}, {'é', 'e'}, {'í', 'i'}, {'ó', 'o'}, {'ú', 'u'}, {'ü', 'u'},
+    {'À', 'a'}, {'È', 'e'}, {'Ì', 'i'}, {'Ò', 'o'}, {'Ù', 'u'},
+    {'à', 'a'}, {'è', 'e'}, {'ì', 'i'}, {'ò', 'o'}, {'ù', 'u'},
+    {'Â', 'a'}, {'Ê', 'e'}, {'Î', 'i'}, {'Ô', 'o'}, {'Û', 'u'},
+    {'â', 'a'}, {'ê', 'e'}, {'î', 'i'}, {'ô', 'o'}, {'û', 'u'},
+    {'Ã', 'a'}, {'Õ', 'o'}, {'ã', 'a'}, {'õ', 'o'}, {'Ñ', 'ñ'}
+};
 
+string quitarAcentosYMinusculas(const string& texto) {
     string resultado;
     for (char c : texto) {
         if (conversion.count(c)) {
@@ -234,13 +234,8 @@ bool esNumeroDecimal(const string &str, size_t &i, string &decimal, size_t lastP
     if (lastPos > 0 && (str[lastPos - 1] == '.' || str[lastPos - 1] == ',')) {
         decimal = "0" + std::string(1, str[lastPos - 1]) + decimal;
     }
-        
-    //decimal += str[i];
-    //i++; // Saltarse el primer ./,
-    //cout << "delimiters: " << delimiters << "ill" << endl;
 
     while(i < str.size() && (delimiters.find(str[i]) == string::npos || str[i] == '.' || str[i] == ',' || str[i] == '$' || str[i] == '%')){
-        //cout << decimal << " " << str[i] << endl;
         if (!isdigit(str[i]) && str[i] != '.' && str[i] != ',' && str[i] != '$' && str[i] != '%'){
             i = original_i;
             decimal = deciOriginal;
@@ -283,21 +278,21 @@ bool esNumeroDecimal(const string &str, size_t &i, string &decimal, size_t lastP
     return true;
 }
 
+//////////////////////////////////////////////////////////
+////////////// Tokenizar
+//////////////////////////////////////////////////////////
+
 void Tokenizador::Tokenizar(const string& str, list<string>& tokens) const {
     tokens.clear();
     string strstr = pasarAminuscSinAcentos ? quitarAcentosYMinusculas(str) : str;
     bool anadido = false;
 
     string::size_type lastPos = strstr.find_first_not_of(delimiters, 0);
-    //cout << "lastPos: " << lastPos << endl;
     string::size_type pos = strstr.find_first_of(delimiters, lastPos);
 
     while (lastPos != string::npos) {
         string tok = strstr.substr(lastPos, pos - lastPos);
         anadido = false;
-        //cout << "tok: " << tok << " pos: " << pos << " lastPos: " << lastPos << endl;
-        //cout << "lastpos-1: " << lastPos - 1 << endl;
-        //cout << "lastpos -1: " << strstr[lastPos - 1] << endl;
 
         if (casosEspeciales) {
 
@@ -306,31 +301,24 @@ void Tokenizador::Tokenizar(const string& str, list<string>& tokens) const {
                 anadido = true;
             }
 
-            //cout << "lastpos-1: " << lastPos - 1 << endl;
-            //cout << "lastpos -1: " << strstr[lastPos - 1] << endl;
-
             if (((strstr[pos] == '.' || strstr[pos] == ',')
                 || (lastPos > 0 && (strstr[lastPos - 1] == '.' || strstr[lastPos - 1] == ',')))
                 && !anadido && esNumeroDecimal(strstr, pos, tok, lastPos, delimiters)) {
-                //cout << "Numero: " << tok << endl;
                 tokens.push_back(tok);
                 anadido = true;
             }
 
             if (strstr[pos] == '@' && !anadido && esEmail(strstr, pos, tok, delimiters)) {
-                //cout << "Email: " << tok << endl;
                 tokens.push_back(tok);
                 anadido = true;
             }
 
             if (strstr[pos] == '.' && !anadido && esAcronimo(strstr, pos, tok, delimiters)) {
-                //cout << "Acronimo: " << tok << endl;
                 tokens.push_back(tok);
                 anadido = true;
             }
 
             if (strstr[pos] == '-' && !anadido && esMultipalabra(strstr, pos, delimiters, tok)) {
-                //cout << "Multipalabra: " << tok << endl;
                 tokens.push_back(tok);
                 anadido = true;
             }
@@ -339,13 +327,6 @@ void Tokenizador::Tokenizar(const string& str, list<string>& tokens) const {
                 tokens.push_back(tok);
             }
 
-            /*
-            // Detectar número decimal
-            else if (delimitadorSet.count('.') && delimitadorSet.count(',') && esNumeroDecimal(strstr, tempIndex, specialToken, delimiters)) {
-                tokens.push_back(specialToken);
-                lastPos = tempIndex;
-            }
-            */
         } else {
             tokens.push_back(tok);
         }
@@ -413,11 +394,6 @@ bool Tokenizador::TokenizarListaFicheros(const string& i) const {
 }
 
 bool Tokenizador::TokenizarDirectorio(const string& i) const{
-    // Tokeniza todos los archivos que contenga el directorio i, incluyendo los de los subdirectorios, 
-    // guardando la salida en ficheros cuyo nombre sera el de entrada añadiendole extension .tk, y que 
-    // contendra una palabra en cada linea del fichero. Devolvera true si se realiza la tokenizacion de forma 
-    // correcta de todos los archivos; devolvera false en caso contrario enviando a cerr el mensaje correspondiente 
-    // (p.ej. que no exista el directorio i, o los ficheros que no se hayan podido tokenizar)
     DIR *dir;
     struct dirent *ent;
     string f;
@@ -442,8 +418,6 @@ bool Tokenizador::TokenizarDirectorio(const string& i) const{
 }
 
 void Tokenizador::DelimitadoresPalabra(const string& nuevoDelimiters){
-    // Inicializa delimiters a nuevoDelimiters, filtrando que no se introduzcan delimitadores repetidos 
-    // (de izquierda a derecha, en cuyo caso se eliminarian los que hayan sido repetidos por la derecha)
     delimiters = "";
     delimitadorSet.clear();
     espacio = false;
@@ -464,8 +438,6 @@ void Tokenizador::DelimitadoresPalabra(const string& nuevoDelimiters){
 }
 
 void Tokenizador::AnyadirDelimitadoresPalabra(const string& nuevoDelimiters){ 
-    // Añade al final de "delimiters" los nuevos delimitadores que aparezcan en "nuevoDelimiters" 
-    // (no se almacenaran caracteres repetidos)
     for (char c : nuevoDelimiters) {
         if (delimitadorSet.insert(c).second) {  // Solo inserta si no está repetido
             delimiters += c;
@@ -507,10 +479,6 @@ bool Tokenizador::PasarAminuscSinAcentos(){
 }
 
 ostream &operator<<(ostream& os, const Tokenizador& t){
-    // cout << "DELIMITADORES: " << delimiters << " TRATA CASOS ESPECIALES: " << casosEspeciales << " PASAR A MINUSCULAS 
-    // Y SIN ACENTOS: " << pasarAminuscSinAcentos; Aunque se modifique el almacenamiento de los delimitadores por temas 
-    // de eficiencia, el campo delimiters se imprimira con el string leido en el tokenizador 
-    // (tras las modificaciones y eliminacion de los caracteres repetidos correspondientes)
     os << "DELIMITADORES: " << t.delimiters 
        << " TRATA CASOS ESPECIALES: " << t.casosEspeciales 
        << " PASAR A MINUSCULAS Y SIN ACENTOS: " << t.pasarAminuscSinAcentos;
