@@ -120,8 +120,12 @@ string quitarAcentosYMinusculas(const string& texto) {
     string resultado;
     resultado.reserve(texto.size());  // Reservar memoria para evitar reubicaciones
 
-    for (unsigned char c : texto) {
-        resultado += (conversion[c] ? conversion[c] : tolower(c));
+    for (unsigned char c : texto) {  // Usamos unsigned char para manejar correctamente los caracteres
+        if (conversion[c]) {
+            resultado += conversion[c];
+        } else {
+            resultado += tolower(c);
+        }
     }
 
     return resultado;
