@@ -235,14 +235,16 @@ bool esNumeroDecimal(const string &str, size_t &i, string &decimal, size_t lastP
 
     // Si el primer elemento es un ./, se añade el 0.
     if (lastPos > 0 && (str[lastPos - 1] == '.' || str[lastPos - 1] == ',')) {
-        decimal = "0" + str[lastPos - 1] + decimal;
+        decimal = "0" + std::string(1, str[lastPos - 1]) + decimal;
     }
         
-    decimal += str[i];
-    i++; // Saltarse el primer ./,
+    //decimal += str[i];
+    //i++; // Saltarse el primer ./,
+    //cout << "delimiters: " << delimiters << "ill" << endl;
 
-    while(i < str.size() && (delimiters.find(str[i]) == string::npos || (str[i] == '.' || str[i] == ','))) {   // || str[i] == '$' || str[i] == '%'))){
-        if (!isdigit(str[i]) && str[i] != '.' && str[i] != ','){  // && str[i] != '$' && str[i] != '%'){
+    while(i < str.size() && (delimiters.find(str[i]) == string::npos || str[i] == '.' || str[i] == ',' || str[i] == '$' || str[i] == '%')){
+        //cout << decimal << " " << str[i] << endl;
+        if (!isdigit(str[i]) && str[i] != '.' && str[i] != ',' && str[i] != '$' && str[i] != '%'){
             i = original_i;
             decimal = deciOriginal;
             return false;
@@ -259,7 +261,7 @@ bool esNumeroDecimal(const string &str, size_t &i, string &decimal, size_t lastP
         i++;
     }
 
-    if (decimal[decimal.size() - 1] == '.' || decimal[decimal.size() - 1] == ',') 
+    if (decimal[decimal.size() - 1] == '.' || decimal[decimal.size() - 1] == ',')
         decimal.pop_back();
     return true;
 }
@@ -268,7 +270,6 @@ void Tokenizador::Tokenizar(const string& str, list<string>& tokens) const {
     tokens.clear();
     string strstr = pasarAminuscSinAcentos ? quitarAcentosYMinusculas(str) : str;
     bool anadido = false;
-    bool nonum = false;
 
     string::size_type lastPos = strstr.find_first_not_of(delimiters, 0);
     //cout << "lastPos: " << lastPos << endl;
@@ -277,7 +278,6 @@ void Tokenizador::Tokenizar(const string& str, list<string>& tokens) const {
     while (lastPos != string::npos) {
         string tok = strstr.substr(lastPos, pos - lastPos);
         anadido = false;
-        nonum = false;
         //cout << "tok: " << tok << " pos: " << pos << " lastPos: " << lastPos << endl;
         //cout << "lastpos-1: " << lastPos - 1 << endl;
         //cout << "lastpos -1: " << strstr[lastPos - 1] << endl;
