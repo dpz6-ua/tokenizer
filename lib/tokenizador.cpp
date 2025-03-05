@@ -2,10 +2,60 @@
 #include <unistd.h>
 #include <dirent.h>
 
+char conversion[256] = {0};  // Iniciar el arreglo con ceros
+
+void inicializarConversiones() {
+    conversion[0xC1] = 'a'; // Á -> a
+    conversion[0xC9] = 'e'; // É -> e
+    conversion[0xCD] = 'i'; // Í -> i
+    conversion[0xD3] = 'o'; // Ó -> o
+    conversion[0xDA] = 'u'; // Ú -> u
+    conversion[0xDC] = 'u'; // Ü -> u
+    
+    conversion[0xE1] = 'a'; // á -> a
+    conversion[0xE9] = 'e'; // é -> e
+    conversion[0xED] = 'i'; // í -> i
+    conversion[0xF3] = 'o'; // ó -> o
+    conversion[0xFA] = 'u'; // ú -> u
+    conversion[0xFC] = 'u'; // ü -> u
+    
+    conversion[0xC0] = 'a'; // À -> a
+    conversion[0xC8] = 'e'; // È -> e
+    conversion[0xCC] = 'i'; // Ì -> i
+    conversion[0xD2] = 'o'; // Ò -> o
+    conversion[0xD9] = 'u'; // Ù -> u
+    
+    conversion[0xE0] = 'a'; // à -> a
+    conversion[0xE8] = 'e'; // è -> e
+    conversion[0xEC] = 'i'; // ì -> i
+    conversion[0xF2] = 'o'; // ò -> o
+    conversion[0xF9] = 'u'; // ù -> u
+    
+    conversion[0xC2] = 'a'; // Â -> a
+    conversion[0xCA] = 'e'; // Ê -> e
+    conversion[0xCE] = 'i'; // Î -> i
+    conversion[0xD4] = 'o'; // Ô -> o
+    conversion[0xDB] = 'u'; // Û -> u
+    
+    conversion[0xE2] = 'a'; // â -> a
+    conversion[0xEA] = 'e'; // ê -> e
+    conversion[0xEE] = 'i'; // î -> i
+    conversion[0xF4] = 'o'; // ô -> o
+    conversion[0xFB] = 'u'; // û -> u
+    
+    conversion[0xC3] = 'a'; // Ã -> a
+    conversion[0xD5] = 'o'; // Õ -> o
+    conversion[0xE3] = 'a'; // ã -> a
+    conversion[0xF5] = 'o'; // õ -> o
+    
+    conversion[0xD1] = 'ñ'; // Ñ -> n
+}
+
 Tokenizador::Tokenizador(const string& delimitadoresPalabra, const bool& kcasosEspeciales, const bool& minuscSinAcentos){
     // Inicializa delimiters a delimitadoresPalabra filtrando que no se introduzcan delimitadores repetidos 
     // (de izquierda a derecha, en cuyo caso se eliminarian los que hayan sido repetidos por la derecha); 
     // casosEspeciales a kcasosEspeciales; pasarAminuscSinAcentos a minuscSinAcentos
+    inicializarConversiones();
     for (auto c : delimitadoresPalabra){
         if (delimitadorSet.insert(c).second) { // Si es un nuevo caracter, lo añadimos a delimiters
             delimiters += c;
@@ -27,6 +77,7 @@ Tokenizador::Tokenizador(const string& delimitadoresPalabra, const bool& kcasosE
 }
 
 Tokenizador::Tokenizador(const Tokenizador& t){
+    inicializarConversiones();
     // Constructor de copia
     this->delimiters = t.delimiters;
     this->delimitadorSet = t.delimitadorSet;
@@ -36,6 +87,7 @@ Tokenizador::Tokenizador(const Tokenizador& t){
 }
 
 Tokenizador::Tokenizador(){	
+    inicializarConversiones();
     // Inicializa delimiters=",;:.-/+*\\ '\"{}[]()<>¡!¿?&#=\t@"; casosEspeciales a true; pasarAminuscSinAcentos a false
     delimiters = ",;:.-/+*\\ '\"{}[]()<>¡!¿?&#=\t@";
     casosEspeciales = true;
@@ -64,25 +116,14 @@ Tokenizador &Tokenizador::operator=(const Tokenizador& t){
     return *this;
 }
 
-unordered_map<char, char> conversion = {
-    {'Á', 'a'}, {'É', 'e'}, {'Í', 'i'}, {'Ó', 'o'}, {'Ú', 'u'}, {'Ü', 'u'},
-    {'á', 'a'}, {'é', 'e'}, {'í', 'i'}, {'ó', 'o'}, {'ú', 'u'}, {'ü', 'u'},
-    {'À', 'a'}, {'È', 'e'}, {'Ì', 'i'}, {'Ò', 'o'}, {'Ù', 'u'},
-    {'à', 'a'}, {'è', 'e'}, {'ì', 'i'}, {'ò', 'o'}, {'ù', 'u'},
-    {'Â', 'a'}, {'Ê', 'e'}, {'Î', 'i'}, {'Ô', 'o'}, {'Û', 'u'},
-    {'â', 'a'}, {'ê', 'e'}, {'î', 'i'}, {'ô', 'o'}, {'û', 'u'},
-    {'Ã', 'a'}, {'Õ', 'o'}, {'ã', 'a'}, {'õ', 'o'}, {'Ñ', 'ñ'}
-};
-
 string quitarAcentosYMinusculas(const string& texto) {
     string resultado;
-    for (char c : texto) {
-        if (conversion.count(c)) {
-            resultado += conversion[c]; // Sustituir acentuado por versión sin acento
-        } else {
-            resultado += tolower(c); // Convertir cualquier otro carácter a minúscula
-        }
+    resultado.reserve(texto.size());  // Reservar memoria para evitar reubicaciones
+
+    for (unsigned char c : texto) {
+        resultado += (conversion[c] ? conversion[c] : tolower(c));
     }
+
     return resultado;
 }
 
