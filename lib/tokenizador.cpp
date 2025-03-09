@@ -2,7 +2,7 @@
 #include <unistd.h>
 #include <dirent.h>
 
-char conversion[256] = {0};  // Iniciar el arreglo con ceros
+char conversion[256] = {0};
 
 void inicializarConversiones() {
     conversion[0xC1] = 'a'; // Á -> a
@@ -48,7 +48,7 @@ void inicializarConversiones() {
     conversion[0xE3] = 'a'; // ã -> a
     conversion[0xF5] = 'o'; // õ -> o
     
-    conversion[0xD1] = 'ñ'; // Ñ -> n
+    conversion[0xD1] = 'ñ'; // Ñ -> ñ
 }
 
 Tokenizador::Tokenizador(const string& delimitadoresPalabra, const bool& kcasosEspeciales, const bool& minuscSinAcentos){
@@ -136,9 +136,12 @@ string quitarAcentosYMinusculas(const string& texto) {
 //////////////////////////////////////////////////////////
 
 bool esURL(const string& str, size_t i) {
-    return (i + 4 < str.size() && str.substr(i, 4) == "http") ||
-           (i + 5 < str.size() && str.substr(i, 5) == "https") ||
-           (i + 3 < str.size() && str.substr(i, 3) == "ftp");
+    if (i + 3 < str.size() && str[i] == 'f' && str[i + 1] == 't' && str[i + 2] == 'p') return true;
+    if (i + 4 < str.size() && str[i] == 'h' && str[i + 1] == 't' && str[i + 2] == 't' && str[i + 3] == 'p') {
+        if (i + 5 < str.size() && str[i + 4] == 's') return true; // "https"
+        return true; // "http"
+    }
+    return false;
 }
 
 string extraerURL(const string& str, size_t& pos, string token, string delimiters) {
@@ -217,12 +220,6 @@ bool esEmail(const string &str, size_t &i, string &email, string delimiters){
     size_t original = i;
     string especiales = "@.-_";
     string tok = email;
-    for (size_t i = 0; i < delimiters.size(); i++){
-        if (especiales.find(delimiters[i]) != string::npos){
-            delimiters.erase(i, 1);
-            i--;
-        }
-    }
 
     if (i+1 < str.size() && (str[i+1] == '.' || str[i+1] == '-' || str[i+1] == '_')){
         i += 2; // saltarse arroba y elemento
@@ -233,9 +230,8 @@ bool esEmail(const string &str, size_t &i, string &email, string delimiters){
     email += str[i];
     i++;
 
-    while (i < str.size() && delimiters.find(str[i]) == string::npos) {
+    while (i < str.size() && (delimiters.find(str[i]) == string::npos || especiales.find(str[i]) != string::npos)){
         if (str[i] == '@'){
-            //cout << "de aqui" << endl;
             i = original + 1; //saltarse la arroba
             email = tok;
             break;
@@ -297,19 +293,19 @@ bool esNumeroDecimal(const string &str, size_t &i, string &decimal, size_t lastP
         }
 
         if (str[i] == '$' || str[i] == '%'){
+            if (i+1 == str.size()){
+                break;
+            }
             if (i+1 < str.size() && str[i+1] == ' ' && !puntocoma){
                 decimal += str[i];
                 i++;
                 break;
             }
-            if (i+1 < str.size() && delimiters.find(str[i+1]) != string::npos){
+            if (i+1 < str.size()){
                 if (str[i+1] == ' ')
                     break;
                 decimal = str.substr(original_i - 1, auxPos - (original_i - 1));
                 i = auxPos;
-                break;
-            }
-            if (i+1 == str.size()){
                 break;
             }
         }
@@ -401,7 +397,7 @@ bool Tokenizador::Tokenizar(const string& i, const string& f) const {
     }
     entrada.close();
 
-    if (!tokens.empty()) {
+    if (!tokens2.empty()) {
         ofstream salida(f);
         for (const auto& token : tokens2) {
             salida << token << '\n';
